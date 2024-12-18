@@ -174,25 +174,23 @@
 
 .react-flow__edge {
   pointer-events: all;
-  &::before,
-  &::after {
-    display: none;
-  }
 }
 
 .react-flow__edge-path {
-  stroke: #666;
-  stroke-width: 1;
+  stroke: #444;
+  stroke-width: 1.5;
+  stroke-dasharray: 5;
+  animation: flowAnimation 1s linear infinite;
 }
 
-.react-flow__edge.animated path {
-  stroke-dasharray: 4;
-  animation: flowAnimation 1s linear infinite;
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #646cff;
+  stroke-width: 2;
 }
 
 @keyframes flowAnimation {
   from {
-    stroke-dashoffset: 8;
+    stroke-dashoffset: 20;
   }
   to {
     stroke-dashoffset: 0;
@@ -201,10 +199,7 @@
 
 .react-flow__handle {
   opacity: 0;
-  width: 0;
-  height: 0;
-  background: transparent;
-  border: none;
+  pointer-events: none;
 }
 
 .react-flow__background {
@@ -256,4 +251,166 @@
   background: transparent !important;
   padding: 0 !important;
   border: none !important;
+}
+
+.content-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #121212;
+  overflow: hidden;
+}
+
+.tabs {
+  display: flex;
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+  padding: 0 1rem;
+}
+
+.tab {
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 14px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  color: #fff;
+}
+
+.tab.active {
+  color: #fff;
+  border-bottom-color: #646cff;
+}
+
+.tab-panel {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sql-panel {
+  height: 100%;
+  padding: 1rem;
+  background: #1a1a1a;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sql-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.sql-header button {
+  padding: 0.5rem 1rem;
+  background: #252525;
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sql-header button:hover {
+  background: #333;
+}
+
+.sql-content {
+  padding: 1rem;
+  background: #1E1E1E !important;
+  border-radius: 4px;
+  font-family: 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-x: auto;
+  flex: 1;
+  margin: 0;
+}
+
+.sql-content code {
+  font-family: inherit;
+}
+
+/* Style spécifique pour Prism */
+pre[class*="language-"],
+code[class*="language-"] {
+  color: #D4D4D4;
+  background: none;
+  font-family: 'Consolas', Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+  tab-size: 4;
+  hyphens: none;
+}
+
+/* Styles de coloration syntaxique */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #6A9955;
+}
+
+.token.punctuation {
+  color: #D4D4D4;
+}
+
+.token.property,
+.token.keyword,
+.token.tag {
+  color: #569CD6;
+}
+
+.token.class-name {
+  color: #4EC9B0;
+}
+
+.token.boolean,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #569CD6;
+}
+
+.token.number {
+  color: #B5CEA8;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #CE9178;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #D4D4D4;
+}
+
+.token.atrule,
+.token.attr-value {
+  color: #CE9178;
+}
+
+.token.function {
+  color: #DCDCAA;
 } 

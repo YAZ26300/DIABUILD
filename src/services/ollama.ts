@@ -35,53 +35,87 @@ export const generateDiagram = async (prompt: string): Promise<DiagramResponse> 
       },
       body: JSON.stringify({
         model: "llama3.2",
-        prompt: `Create a detailed database schema as JSON for React Flow.
-                Context: ${prompt}
+        prompt: `You are a database architect specialized in creating comprehensive database schemas.
+                Task: Create a complete database schema for: ${prompt}
 
-                Rules for table structure:
-                1. Each table must have:
-                   - Primary key 'id' of type 'ints'
-                   - Relevant fields with proper types (ints, text, bool, date)
-                   - Foreign keys when referencing other tables
-                2. Use clear naming conventions:
-                   - Table names in plural (users, orders, etc.)
-                   - Field names in snake_case
-                   - Foreign keys as table_name_id
+                Requirements for a COMPLETE schema:
+                1. Table Structure:
+                   - Every table must have:
+                     * Primary key 'id' (ints)
+                     * Timestamps (created_at, updated_at)
+                     * All relevant fields for the domain
+                     * Proper foreign keys for relationships
+                   - Use appropriate field types:
+                     * ints: for IDs and numbers
+                     * text: for strings and descriptions
+                     * bool: for flags and status
+                     * date: for dates and timestamps
+                     * float: for decimal numbers
+                     * json: for complex data
 
-                Rules for layout:
-                1. Position tables in a logical flow:
-                   - Main tables at top (y: 0-200)
-                   - Related tables below (y: 250+)
-                   - Space horizontally by 300px
-                2. Connections must show actual relationships:
-                   - Source: table with foreign key
-                   - Target: referenced table
-                   - Use animated edges for visibility
+                2. Required Tables:
+                   - Main entity tables (users, products, etc.)
+                   - Junction tables for many-to-many relationships
+                   - Configuration and status tables
+                   - At least 4-6 interconnected tables
+                   - Include all necessary fields for each table
 
-                Respond only with valid JSON matching this structure:
+                3. Relationships:
+                   - Define all foreign key relationships
+                   - Include junction tables for many-to-many
+                   - Ensure referential integrity
+
+                Return ONLY a valid JSON object with this structure:
                 {
-                  "nodes": [{
-                    "id": string,
-                    "type": "dbTable",
-                    "data": {
-                      "label": string,
-                      "fields": [{
-                        "name": string,
-                        "type": string,
-                        "isPrimary": boolean,
-                        "isForeign": boolean
-                      }]
-                    },
-                    "position": { "x": number, "y": number }
-                  }],
-                  "edges": [{
-                    "id": string,
-                    "source": string,
-                    "target": string,
-                    "type": "smoothstep",
-                    "animated": true
-                  }]
-                }`,
+                  "nodes": [
+                    {
+                      "id": "1",
+                      "type": "dbTable",
+                      "data": {
+                        "label": "table_name",
+                        "fields": [
+                          {
+                            "name": "id",
+                            "type": "ints",
+                            "isPrimary": true
+                          },
+                          {
+                            "name": "foreign_key_id",
+                            "type": "ints",
+                            "isForeign": true
+                          },
+                          {
+                            "name": "field_name",
+                            "type": "field_type"
+                          }
+                        ]
+                      },
+                      "position": { "x": number, "y": number }
+                    }
+                  ],
+                  "edges": [
+                    {
+                      "id": "e1-2",
+                      "source": "1",
+                      "target": "2",
+                      "type": "smoothstep",
+                      "animated": true
+                    }
+                  ]
+                }
+
+                Layout Rules:
+                - Position main tables at top (y: 0-200)
+                - Related tables below (y: 250+)
+                - Space horizontally by 300px
+                - Avoid overlapping
+                - Organize for minimal edge crossing
+
+                IMPORTANT: 
+                - Generate a COMPLETE schema with ALL necessary tables and fields
+                - Include ALL relevant relationships
+                - Return ONLY the JSON, no explanations
+                - Ensure the schema is production-ready`,
         stream: false,
       }),
     });
@@ -91,35 +125,53 @@ export const generateDiagram = async (prompt: string): Promise<DiagramResponse> 
     }
 
     const data = await response.json();
-    console.log('AI Response:', data.response); // Pour le debug
+    console.log('Raw AI Response:', data.response);
 
     try {
-      // Cherche le premier { et le dernier } pour extraire le JSON
-      const jsonStr = data.response.substring(
-        data.response.indexOf('{'),
-        data.response.lastIndexOf('}') + 1
-      );
-      const diagramData = JSON.parse(jsonStr);
+      // Trouver et extraire le JSON de la réponse
+      const jsonMatch = data.response.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in response');
+      }
 
-      // Validation basique
-      if (!diagramData.nodes || !diagramData.edges) {
+      const diagramData = JSON.parse(jsonMatch[0]);
+      console.log('Parsed diagram data:', diagramData);
+
+      // Validation
+      if (!Array.isArray(diagramData.nodes) || !Array.isArray(diagramData.edges)) {
         throw new Error('Invalid diagram structure');
       }
+
+      // Vérifier que chaque nœud a la structure correcte
+      diagramData.nodes = diagramData.nodes.map(node => ({
+        ...node,
+        type: 'dbTable',
+        data: {
+          ...node.data,
+          fields: Array.isArray(node.data.fields) ? node.data.fields : []
+        }
+      }));
 
       return diagramData;
     } catch (parseError) {
       console.error('Parse error:', parseError);
-      // Retourner un diagramme vide en cas d'erreur
+      // Diagramme par défaut en cas d'erreur
       return {
         nodes: [
           {
             id: '1',
             type: 'dbTable',
             data: {
-              label: 'Error: Invalid AI Response',
-              fields: []
+              label: 'Example Table',
+              fields: [
+                {
+                  name: 'id',
+                  type: 'ints',
+                  isPrimary: true
+                }
+              ]
             },
-            position: { x: 400, y: 0 }
+            position: { x: 400, y: 200 }
           }
         ],
         edges: []
@@ -129,4 +181,62 @@ export const generateDiagram = async (prompt: string): Promise<DiagramResponse> 
     console.error('Error calling Ollama:', error);
     throw error;
   }
+};
+
+export const generateSQL = (nodes: DBTableNode[]): string => {
+  let sql = '';
+
+  nodes.forEach(node => {
+    sql += `-- Create ${node.data.label} table\n`;
+    sql += `CREATE TABLE ${node.data.label} (\n`;
+    
+    const fields = node.data.fields.map((field: any) => {
+      let fieldDef = `  ${field.name} `;
+      
+      let fieldType = '';
+      switch (field.type) {
+        case 'ints':
+          fieldType = 'bigint';
+          break;
+        case 'text':
+          fieldType = 'text';
+          break;
+        case 'bool':
+          fieldType = 'boolean';
+          break;
+        case 'date':
+          fieldType = 'date';
+          break;
+        case 'float':
+          fieldType = 'decimal';
+          break;
+        default:
+          fieldType = 'text';
+      }
+      
+      if (field.isPrimary) {
+        fieldDef += `${fieldType} PRIMARY KEY GENERATED ALWAYS AS IDENTITY`;
+      } else if (field.isForeign) {
+        fieldDef += `${fieldType} REFERENCES ${field.references} (id)`;
+      } else {
+        fieldDef += fieldType;
+        if (field.required) {
+          fieldDef += ' NOT NULL';
+        }
+        if (field.unique) {
+          fieldDef += ' UNIQUE';
+        }
+        if (field.default !== undefined) {
+          fieldDef += ` DEFAULT ${field.default}`;
+        }
+      }
+      
+      return fieldDef;
+    });
+    
+    sql += fields.join(',\n');
+    sql += '\n);\n\n';
+  });
+
+  return sql;
 }; 

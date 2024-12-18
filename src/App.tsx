@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import ReactFlow, { 
   Controls, 
   Background,
@@ -9,16 +9,22 @@ import ReactFlow, {
   NodeChange,
   EdgeChange,
   applyNodeChanges,
-  applyEdgeChanges
+  applyEdgeChanges,
+  ConnectionMode,
+  ConnectionLineType,
 } from 'reactflow';
 import ChatInput from './components/ChatInput';
 import MessageList from './components/MessageList';
 import { Message } from './types';
-import { generateDiagram } from './services/ollama';
+import { generateDiagram, generateSQL } from './services/ollama';
 import 'reactflow/dist/style.css';
 import './App.css';
 import DBTableNode from './components/DBTableNode';
 import dagre from 'dagre';
+import TabPanel from './components/TabPanel';
+import Prism from 'prismjs';
+import 'prismjs/themes/prism-tomorrow.css';
+import 'prismjs/components/prism-sql';
 
 const nodeTypes = {
   dbTable: DBTableNode
@@ -62,6 +68,8 @@ function App() {
   const [edges, setEdges] = useState<Edge[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('diagram');
+  const [sqlScript, setSqlScript] = useState('');
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -91,32 +99,52 @@ function App() {
     
     try {
       const diagramData = await generateDiagram(content);
+      console.log('Received diagram data:', diagramData);
+
+      if (!diagramData.nodes || diagramData.nodes.length === 0) {
+        throw new Error('No nodes in diagram data');
+      }
+
       const layoutedElements = getLayoutedElements(
         diagramData.nodes,
         diagramData.edges
       );
+      console.log('Layouted elements:', layoutedElements);
+
       setNodes(layoutedElements.nodes);
       setEdges(layoutedElements.edges);
       
+      // Générer le SQL
+      const sql = generateSQL(diagramData.nodes);
+      setSqlScript(sql);
+      
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "J'ai généré le diagramme selon votre description.",
+        content: `Diagramme et script SQL générés avec ${layoutedElements.nodes.length} tables.`,
         role: 'assistant',
       };
       
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
+      console.error('Error generating diagram:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "Désolé, une erreur s'est produite lors de la génération du diagramme.",
+        content: "Erreur lors de la génération du diagramme. Veuillez réessayer.",
         role: 'assistant'
       };
       setMessages(prev => [...prev, errorMessage]);
-      console.error('Error:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (sqlScript) {
+      requestAnimationFrame(() => {
+        Prism.highlightAll();
+      });
+    }
+  }, [sqlScript, activeTab]);
 
   return (
     <div className="app-layout">
@@ -125,19 +153,57 @@ function App() {
         <MessageList messages={messages} />
         <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
       </div>
-      <div className="diagram-section">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          fitView
-        >
-          <Background />
-          <Controls />
-        </ReactFlow>
+      <div className="content-section">
+        <div className="tabs">
+          <button 
+            className={`tab ${activeTab === 'diagram' ? 'active' : ''}`}
+            onClick={() => setActiveTab('diagram')}
+          >
+            Diagram
+          </button>
+          <button 
+            className={`tab ${activeTab === 'migrations' ? 'active' : ''}`}
+            onClick={() => setActiveTab('migrations')}
+          >
+            Migrations
+          </button>
+        </div>
+        
+        <TabPanel value="diagram" activeTab={activeTab}>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            fitView
+            connectionMode={ConnectionMode.Loose}
+            connectionLineType={ConnectionLineType.SmoothStep}
+            defaultEdgeOptions={{
+              type: 'smoothstep',
+              animated: true,
+              style: { stroke: '#444', strokeWidth: 1.5 }
+            }}
+          >
+            <Background />
+            <Controls />
+          </ReactFlow>
+        </TabPanel>
+
+        <TabPanel value="migrations" activeTab={activeTab}>
+          <div className="sql-panel">
+            <div className="sql-header">
+              <h3>SQL Migration Script</h3>
+              <button onClick={() => navigator.clipboard.writeText(sqlScript)}>
+                Copy to Clipboard
+              </button>
+            </div>
+            <pre className="language-sql">
+              <code>{sqlScript}</code>
+            </pre>
+          </div>
+        </TabPanel>
       </div>
     </div>
   );
