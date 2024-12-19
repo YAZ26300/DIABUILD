@@ -20,6 +20,7 @@
     "@uiw/react-textarea-code-editor": "^3.1.0",
     "dagre": "^0.8.5",
     "mermaid": "^11.4.1",
+    "pdfjs-dist": "^4.9.155",
     "pg": "^8.13.1",
     "prismjs": "^1.29.0",
     "react": "^18.3.1",

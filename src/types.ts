@@ -10,4 +10,9 @@ export interface Message {
   sql?: string;
   tables?: Array<{ name: string; description: string }>;
   isLoading?: boolean;
+}
+
+export interface ChatInputProps {
+  onSend: (message: string) => void;
+  isLoading: boolean;
 } 
