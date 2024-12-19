@@ -16,6 +16,8 @@ import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
 import 'prismjs/components/prism-sql';
 import { DropdownMenu, Button, Flex } from '@radix-ui/themes';
+import { resetApplication } from './services/resetService';
+import DeleteConfirmationDialog from './components/DeleteConfirmationDialog';
 
 function App() {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, updateGraph } = useGraph();
@@ -23,12 +25,14 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('diagram');
   const [sqlScript, setSqlScript] = useState('');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleReset = () => {
-    setMessages([]);
-    setSqlScript('');
-    updateGraph([], []);
-    setActiveTab('diagram');
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmReset = () => {
+    resetApplication();
   };
 
   const handleDownloadSQL = () => {
@@ -228,6 +232,11 @@ function App() {
           </div>
         </TabPanel>
       </div>
+      <DeleteConfirmationDialog 
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleConfirmReset}
+      />
     </MainLayout>
   );
 }
