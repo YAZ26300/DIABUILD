@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 import ReactFlow, { Controls, Background } from 'reactflow';
-import ChatInput from './components/ChatInput';
+import MainLayout from './layouts/MainLayout';
 import MessageList from './components/MessageList';
+import ChatInput from './components/ChatInput';
+import TabPanel from './components/TabPanel';
+import { useGraph } from './hooks/useGraph';
+import { generateDiagram } from './services/ollama';
+import { generateSQL } from './utils/sqlGenerator';
+import { downloadSQL } from './services/fileService';
 import { Message } from './types';
-import { generateDiagram, generateSQL } from './services/ollama';
+import { NODE_TYPES, DEFAULT_EDGE_OPTIONS, FLOW_CONFIG } from './constants/flowConfig';
 import 'reactflow/dist/style.css';
 import './App.css';
-import TabPanel from './components/TabPanel';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
 import 'prismjs/components/prism-sql';
-import MainLayout from './layouts/MainLayout';
-import { useGraph } from './hooks/useGraph';
-import { NODE_TYPES, DEFAULT_EDGE_OPTIONS, FLOW_CONFIG } from './constants/flowConfig';
+import { DropdownMenu, Button, Flex } from '@radix-ui/themes';
 
 function App() {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, updateGraph } = useGraph();
@@ -20,6 +23,27 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('diagram');
   const [sqlScript, setSqlScript] = useState('');
+
+  const handleReset = () => {
+    setMessages([]);
+    setSqlScript('');
+    updateGraph([], []);
+    setActiveTab('diagram');
+  };
+
+  const handleDownloadSQL = () => {
+    if (!sqlScript) return;
+    
+    const blob = new Blob([sqlScript], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'database_schema.sql';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
 
   const handleSendMessage = async (content: string) => {
     setIsLoading(true);
@@ -101,24 +125,76 @@ function App() {
   return (
     <MainLayout>
       <div className="chat-section">
-        <h1>IA Diagram Chat</h1>
+        <h1 className="chat-title">IA Diagram Chat</h1>
         <MessageList messages={messages} isLoading={isLoading} />
         <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
       </div>
       <div className="content-section">
         <div className="tabs">
-          <button
-            className={`tab ${activeTab === 'diagram' ? 'active' : ''}`}
-            onClick={() => setActiveTab('diagram')}
-          >
-            Diagram
-          </button>
-          <button
-            className={`tab ${activeTab === 'migrations' ? 'active' : ''}`}
-            onClick={() => setActiveTab('migrations')}
-          >
-            Migrations
-          </button>
+          <div className="tabs-left">
+            <button
+              className={`tab ${activeTab === 'diagram' ? 'active' : ''}`}
+              onClick={() => setActiveTab('diagram')}
+            >
+              Diagram
+            </button>
+            <button
+              className={`tab ${activeTab === 'migrations' ? 'active' : ''}`}
+              onClick={() => sqlScript ? setActiveTab('migrations') : null}
+              disabled={!sqlScript}
+              style={{ 
+                opacity: sqlScript ? 1 : 0.5,
+                cursor: sqlScript ? 'pointer' : 'not-allowed'
+              }}
+            >
+              Migrations
+            </button>
+          </div>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <Button 
+                variant="ghost" 
+                size="2"
+                style={{ 
+                  padding: '8px',
+                  color: '#888',
+                  cursor: 'pointer',
+                }}
+              >
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 16 16" 
+                  fill="currentColor"
+                  style={{ transform: 'rotate(90deg)' }}
+                >
+                  <path d="M8 2a1 1 0 110-2 1 1 0 010 2zM8 9a1 1 0 110-2 1 1 0 010 2zM8 16a1 1 0 110-2 1 1 0 010 2z"/>
+                </svg>
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Item onClick={handleDownloadSQL} disabled={!sqlScript}>
+                <Flex gap="2" align="center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <path d="M7 10l5 5 5-5"/>
+                    <path d="M12 15V3"/>
+                  </svg>
+                  Download SQL
+                </Flex>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item color="red" onClick={handleReset}>
+                <Flex gap="2" align="center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 6h18"/>
+                    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
+                    <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                  </svg>
+                  Reset All
+                </Flex>
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
         </div>
 
         <TabPanel value="diagram" activeTab={activeTab}>
