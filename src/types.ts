@@ -8,8 +8,6 @@ export interface Message {
   content: string;
   role: 'user' | 'assistant';
   sql?: string;
-  tables?: {
-    name: string;
-    description: string;
-  }[];
+  tables?: Array<{ name: string; description: string }>;
+  isLoading?: boolean;
 } 

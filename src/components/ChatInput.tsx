@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, TextArea, Text, Flex, Box } from '@radix-ui/themes';
 import '@radix-ui/themes/styles.css';
 
@@ -15,6 +15,32 @@ const PROMPT_TEMPLATES = [
 
 const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
   const [input, setInput] = useState('');
+
+  const handleTemplateClick = async (template: string) => {
+    try {
+      const response = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama3.2',
+          prompt: `In one short sentence, list only the main tables needed for a ${template} database.`,
+          stream: false,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setInput(data.response);
+    } catch (error) {
+      console.error('Error generating prompt:', error);
+      setInput(`Create a ${template} with users, messages, and core features.`);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,12 +66,20 @@ const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
           <Button
             key={index}
             variant="surface"
-            onClick={() => setInput(template)}
+            onClick={() => handleTemplateClick(template)}
             disabled={isLoading}
             style={{ 
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
               color: 'var(--gray-11)',
-              borderRadius: '9999px'
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
             }}
           >
             {template}

@@ -44,15 +44,26 @@ const MessageList = ({ messages, isLoading }: MessageListProps) => {
             marginBottom: '16px'
           }}
         >
-          <Text 
-            size="2" 
-            style={{ 
-              color: 'var(--gray-11)',
-              lineHeight: '1.6'
-            }}
-          >
-            {message.content}
-          </Text>
+          {message.isLoading ? (
+            <div className="loading-message">
+              <span>Working on it</span>
+              <span className="loading-dots">
+                <span>.</span>
+                <span>.</span>
+                <span>.</span>
+              </span>
+            </div>
+          ) : (
+            <Text 
+              size="2" 
+              style={{ 
+                color: 'var(--gray-11)',
+                lineHeight: '1.6'
+              }}
+            >
+              {message.content}
+            </Text>
+          )}
 
           {message.sql && (
             <Box 
@@ -144,18 +155,6 @@ const MessageList = ({ messages, isLoading }: MessageListProps) => {
           )}
         </Box>
       ))}
-
-      {isLoading && (
-        <Text 
-          size="2" 
-          style={{ 
-            color: 'var(--gray-11)',
-            fontStyle: 'italic'
-          }}
-        >
-          Working on it...
-        </Text>
-      )}
     </Box>
   );
 };

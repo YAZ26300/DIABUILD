@@ -32,6 +32,14 @@ function App() {
 
     setMessages(prev => [...prev, userMessage]);
 
+    const loadingMessage: Message = {
+      id: 'loading',
+      content: 'Working on it',
+      role: 'assistant',
+      isLoading: true
+    };
+    setMessages(prev => [...prev, loadingMessage]);
+
     try {
       const diagramData = await generateDiagram(content);
 
@@ -63,14 +71,20 @@ function App() {
         tables: tableDescriptions
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages(prev => {
+        const filteredMessages = prev.filter(m => m.id !== 'loading');
+        return [...filteredMessages, assistantMessage];
+      });
     } catch (error) {
       console.error('Error generating diagram:', error);
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        content: "Erreur lors de la génération du diagramme. Veuillez réessayer.",
-        role: 'assistant'
-      }]);
+      setMessages(prev => {
+        const filteredMessages = prev.filter(m => m.id !== 'loading');
+        return [...filteredMessages, {
+          id: (Date.now() + 1).toString(),
+          content: "Erreur lors de la génération du diagramme. Veuillez réessayer.",
+          role: 'assistant'
+        }];
+      });
     } finally {
       setIsLoading(false);
     }
