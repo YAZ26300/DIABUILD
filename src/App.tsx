@@ -25,6 +25,7 @@ import TabPanel from './components/TabPanel';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
 import 'prismjs/components/prism-sql';
+import { Theme } from '@radix-ui/themes';
 
 const nodeTypes = {
   dbTable: DBTableNode
@@ -109,7 +110,6 @@ function App() {
         diagramData.nodes,
         diagramData.edges
       );
-      console.log('Layouted elements:', layoutedElements);
 
       setNodes(layoutedElements.nodes);
       setEdges(layoutedElements.edges);
@@ -118,10 +118,28 @@ function App() {
       const sql = generateSQL(diagramData.nodes);
       setSqlScript(sql);
       
+      // Créer la description des tables
+      const tableDescriptions = diagramData.nodes.map(node => {
+        const fields = node.data.fields.map(f => 
+          `${f.name}${f.isPrimary ? ' (Primary Key)' : ''}${f.isForeign ? ' (Foreign Key)' : ''}`
+          + (f.description ? ` - ${f.description}` : '')
+        );
+        
+        return {
+          name: node.data.label,
+          description: `${node.data.purpose || 'Stores and manages'} ${node.data.label.toLowerCase()} data.\n\n` +
+                      `Purpose: ${node.data.purpose || 'Manages core data for ' + node.data.label}\n` +
+                      `Columns: ${fields.join(', ')}`
+        };
+      });
+      
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `Diagramme et script SQL générés avec ${layoutedElements.nodes.length} tables.`,
+        content: diagramData.description || 
+                 `The ${content.toLowerCase()} schema has been created with the following structure:`,
         role: 'assistant',
+        sql: sql,
+        tables: tableDescriptions
       };
       
       setMessages(prev => [...prev, assistantMessage]);
@@ -147,65 +165,76 @@ function App() {
   }, [sqlScript, activeTab]);
 
   return (
-    <div className="app-layout">
-      <div className="chat-section">
-        <h1>IA Diagram Chat</h1>
-        <MessageList messages={messages} />
-        <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
-      </div>
-      <div className="content-section">
-        <div className="tabs">
-          <button 
-            className={`tab ${activeTab === 'diagram' ? 'active' : ''}`}
-            onClick={() => setActiveTab('diagram')}
-          >
-            Diagram
-          </button>
-          <button 
-            className={`tab ${activeTab === 'migrations' ? 'active' : ''}`}
-            onClick={() => setActiveTab('migrations')}
-          >
-            Migrations
-          </button>
+    <Theme appearance="dark" grayColor="sand" radius="large" scaling="95%">
+      <div className="app-layout">
+        <div className="chat-section">
+          <h1>IA Diagram Chat</h1>
+          <MessageList messages={messages} isLoading={isLoading} />
+          <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
         </div>
-        
-        <TabPanel value="diagram" activeTab={activeTab}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={nodeTypes}
-            fitView
-            connectionMode={ConnectionMode.Loose}
-            connectionLineType={ConnectionLineType.SmoothStep}
-            defaultEdgeOptions={{
-              type: 'smoothstep',
-              animated: true,
-              style: { stroke: '#444', strokeWidth: 1.5 }
-            }}
-          >
-            <Background />
-            <Controls />
-          </ReactFlow>
-        </TabPanel>
-
-        <TabPanel value="migrations" activeTab={activeTab}>
-          <div className="sql-panel">
-            <div className="sql-header">
-              <h3>SQL Migration Script</h3>
-              <button onClick={() => navigator.clipboard.writeText(sqlScript)}>
-                Copy to Clipboard
-              </button>
-            </div>
-            <pre className="language-sql">
-              <code>{sqlScript}</code>
-            </pre>
+        <div className="content-section">
+          <div className="tabs">
+            <button 
+              className={`tab ${activeTab === 'diagram' ? 'active' : ''}`}
+              onClick={() => setActiveTab('diagram')}
+            >
+              Diagram
+            </button>
+            <button 
+              className={`tab ${activeTab === 'migrations' ? 'active' : ''}`}
+              onClick={() => setActiveTab('migrations')}
+            >
+              Migrations
+            </button>
           </div>
-        </TabPanel>
+          
+          <TabPanel value="diagram" activeTab={activeTab}>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              nodeTypes={nodeTypes}
+              fitView
+              connectionMode={ConnectionMode.Loose}
+              connectionLineType={ConnectionLineType.SmoothStep}
+              defaultEdgeOptions={{
+                type: 'smoothstep',
+                animated: true,
+                style: { 
+                  stroke: '#666',
+                  strokeWidth: 2,
+                  opacity: 0.8
+                },
+                labelStyle: { display: 'none' },
+                markerEnd: {
+                  type: 'arrowclosed',
+                  color: '#666'
+                }
+              }}
+            >
+              <Background />
+              <Controls />
+            </ReactFlow>
+          </TabPanel>
+
+          <TabPanel value="migrations" activeTab={activeTab}>
+            <div className="sql-panel">
+              <div className="sql-header">
+                <h3>SQL Migration Script</h3>
+                <button onClick={() => navigator.clipboard.writeText(sqlScript)}>
+                  Copy to Clipboard
+                </button>
+              </div>
+              <pre className="language-sql">
+                <code>{sqlScript}</code>
+              </pre>
+            </div>
+          </TabPanel>
+        </div>
       </div>
-    </div>
+    </Theme>
   );
 }
 

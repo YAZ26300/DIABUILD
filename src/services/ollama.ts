@@ -3,11 +3,13 @@ interface DBTableNode {
   type: 'dbTable';
   data: {
     label: string;
+    purpose?: string;
     fields: Array<{
       name: string;
       type: string;
       isPrimary?: boolean;
       isForeign?: boolean;
+      description?: string;
     }>;
   };
   position: { x: number; y: number };
@@ -22,6 +24,7 @@ interface DiagramEdge {
 }
 
 interface DiagramResponse {
+  description?: string;
   nodes: DBTableNode[];
   edges: DiagramEdge[];
 }
@@ -143,7 +146,7 @@ export const generateDiagram = async (prompt: string): Promise<DiagramResponse> 
       }
 
       // Vérifier que chaque nœud a la structure correcte
-      diagramData.nodes = diagramData.nodes.map(node => ({
+      diagramData.nodes = diagramData.nodes.map((node: any) => ({
         ...node,
         type: 'dbTable',
         data: {
