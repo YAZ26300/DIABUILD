@@ -18,6 +18,10 @@ import 'prismjs/components/prism-sql';
 import { DropdownMenu, Button, Flex } from '@radix-ui/themes';
 import { resetApplication } from './services/resetService';
 import DeleteConfirmationDialog from './components/DeleteConfirmationDialog';
+import { initSupabase, deployToSupabase } from './services/supabaseService';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import Notification from './components/Notification';
+import LoadingModal from './components/LoadingModal';
 
 function App() {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, updateGraph } = useGraph();
@@ -26,6 +30,34 @@ function App() {
   const [activeTab, setActiveTab] = useState('diagram');
   const [sqlScript, setSqlScript] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deploymentStep, setDeploymentStep] = useState(1);
+
+  useEffect(() => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase environment variables:', {
+        url: !!supabaseUrl,
+        key: !!supabaseAnonKey
+      });
+      return;
+    }
+
+    try {
+      const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+      setSupabase(supabaseClient);
+      console.log('Supabase client initialized successfully');
+    } catch (error) {
+      console.error('Error initializing Supabase client:', error);
+    }
+  }, []);
 
   const handleReset = () => {
     setIsDeleteDialogOpen(true);
@@ -118,6 +150,45 @@ function App() {
     }
   };
 
+  const handleSupabaseDeployment = async () => {
+    if (!supabase) {
+      setNotification({
+        message: "Error: Supabase client not initialized",
+        type: 'error'
+      });
+      return;
+    }
+
+    setIsDeploying(true);
+    setDeploymentStep(1);
+
+    try {
+      const result = await deployToSupabase(
+        sqlScript, 
+        supabase,
+        (step) => setDeploymentStep(step)
+      );
+
+      if (result.success) {
+        setNotification({
+          message: "Schema deployed successfully!",
+          type: 'success'
+        });
+      }
+    } catch (error: any) {
+      console.error('Deployment error:', error);
+      setNotification({
+        message: error.message || "Error during deployment",
+        type: 'error'
+      });
+    } finally {
+      setTimeout(() => {
+        setIsDeploying(false);
+        setDeploymentStep(1);
+      }, 1000);
+    }
+  };
+
   useEffect(() => {
     if (sqlScript) {
       requestAnimationFrame(() => {
@@ -197,6 +268,14 @@ function App() {
                   Reset All
                 </Flex>
               </DropdownMenu.Item>
+              <DropdownMenu.Item onClick={handleSupabaseDeployment} disabled={!sqlScript}>
+                <Flex gap="2" align="center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/>
+                  </svg>
+                  Deploy to Supabase
+                </Flex>
+              </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
         </div>
@@ -236,6 +315,17 @@ function App() {
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onConfirm={handleConfirmReset}
+      />
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
+      <LoadingModal 
+        isOpen={isDeploying}
+        currentStep={deploymentStep}
       />
     </MainLayout>
   );

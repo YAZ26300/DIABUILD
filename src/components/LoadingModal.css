@@ -1,0 +1,93 @@
+.loading-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-modal {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 2rem;
+  min-width: 400px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.loading-modal h2 {
+  color: #fff;
+  margin: 0 0 2rem;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #333;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.step-item.current {
+  color: #fff;
+}
+
+.step-item.current .step-number {
+  background: #2563eb;
+  color: #fff;
+}
+
+.step-item.completed {
+  color: #10b981;
+}
+
+.step-item.completed .step-number {
+  background: #10b981;
+  color: #fff;
+}
+
+.step-loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #2563eb;
+  border-top-color: transparent;
+  border-radius: 50%;
+  margin-left: auto;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.step-label {
+  font-size: 0.95rem;
+  flex: 1;
+} 
