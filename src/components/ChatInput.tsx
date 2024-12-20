@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Button, TextArea, Text, Flex, Box } from '@radix-ui/themes';
 import '@radix-ui/themes/styles.css';
-import * as pdfjsLib from 'pdfjs-dist';
 
 interface ChatInputProps {
   onSend: (message: string) => void;

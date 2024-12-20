@@ -18,6 +18,8 @@ export const ToolbarButtons = ({
 }: ToolbarButtonsProps) => {
   const buttonStyles = "text-gray-400 hover:text-white flex items-center gap-2 border border-[rgb(34,255,158,0.3)] rounded-full px-3 py-1 cursor-pointer transition-all duration-300 hover:border-[rgb(34,255,158,0.5)] hover:bg-black/20 hover:shadow-[0_0_8px_rgba(34,255,158,0.3),inset_0_0_2px_rgba(34,255,158,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-[rgb(34,255,158,0.3)] disabled:hover:bg-transparent";
 
+  const menuItemStyles = "flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-black/20 cursor-pointer transition-all duration-300 hover:shadow-[0_0_8px_rgba(34,255,158,0.3),inset_0_0_2px_rgba(34,255,158,0.3)] disabled:opacity-50 disabled:cursor-not-allowed";
+
   return (
     <div className="tabs-right flex items-center gap-4">
       <Button 
@@ -47,8 +49,12 @@ export const ToolbarButtons = ({
             </svg>
           </Button>
         </DropdownMenu.Trigger>
-        <DropdownMenu.Content>
-          <DropdownMenu.Item onClick={onDownload} disabled={!sqlScript}>
+        <DropdownMenu.Content className="bg-[#1a1a1a] border border-[rgb(34,255,158,0.3)] rounded-lg shadow-lg">
+          <DropdownMenu.Item 
+            onClick={onDownload} 
+            disabled={!sqlScript}
+            className={menuItemStyles}
+          >
             <Flex gap="2" align="center">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -58,7 +64,10 @@ export const ToolbarButtons = ({
               Download SQL
             </Flex>
           </DropdownMenu.Item>
-          <DropdownMenu.Item color="red" onClick={onReset}>
+          <DropdownMenu.Item 
+            onClick={onReset}
+            className={`${menuItemStyles} text-red-400 hover:text-red-300`}
+          >
             <Flex gap="2" align="center">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M3 6h18"/>

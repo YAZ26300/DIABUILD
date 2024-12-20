@@ -42,7 +42,7 @@ const LoadingModal = ({
   return (
     <div className="loading-modal-overlay">
       <div className="loading-modal">
-        <h2>Déploiement en cours</h2>
+        <h2>Deploying to Supabase</h2>
         <div className="steps-container">
           {activeSteps.map((step) => (
             <div key={step.id} className={`step-item ${step.status}`}>
