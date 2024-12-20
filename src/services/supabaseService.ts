@@ -11,21 +11,16 @@ export const initSupabase = ({ projectUrl, anonKey }: SupabaseConfig) => {
 
 export const deployToSupabase = async (sqlScript: string, supabase: SupabaseClient, onProgress: (step: number) => void) => {
   try {
-    onProgress(1); // Authentication check
-    console.log('Step 1: Checking authentication...');
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) throw new Error('Authentication required');
-
-    onProgress(2); // SQL preparation
-    console.log('Step 2: Cleaning SQL script...');
+    onProgress(1); // SQL preparation
+    console.log('Step 1: Cleaning SQL script...');
     const commands = sqlScript
       .replace(/\r\n/g, '\n')
       .split(';')
       .map(cmd => cmd.trim())
       .filter(cmd => cmd.length > 0);
 
-    onProgress(3); // Schema deployment
-    console.log('Step 3: Executing SQL commands...');
+    onProgress(2); // Schema deployment
+    console.log('Step 2: Executing SQL commands...');
     for (const command of commands) {
       if (!command) continue;
       
@@ -41,8 +36,8 @@ export const deployToSupabase = async (sqlScript: string, supabase: SupabaseClie
       }
     }
 
-    onProgress(4); // Completion
-    console.log('Step 4: All commands executed successfully');
+    onProgress(3); // Completion
+    console.log('Step 3: All commands executed successfully');
     return { success: true };
   } catch (error) {
     console.error('Deployment failed:', error);

@@ -14,10 +14,9 @@ interface LoadingModalProps {
 }
 
 const DEFAULT_STEPS: Step[] = [
-  { id: 1, label: "Authentication check", status: 'waiting' },
-  { id: 2, label: "SQL script preparation", status: 'waiting' },
-  { id: 3, label: "Schema deployment", status: 'waiting' },
-  { id: 4, label: "Completion", status: 'waiting' }
+  { id: 1, label: "SQL script preparation", status: 'waiting' },
+  { id: 2, label: "Schema deployment", status: 'waiting' },
+  { id: 3, label: "Completion", status: 'waiting' }
 ];
 
 const LoadingModal = ({ 

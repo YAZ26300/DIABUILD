@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
-import ReactFlow, { Controls, Background } from 'reactflow';
+import { useEffect, useState } from 'react';
+import { useSupabaseAuth } from './hooks/useSupabaseAuth';
+import { AuthWrapper } from './components/AuthWrapper';
+import { ToolbarButtons } from './components/ToolbarButtons';
 import MainLayout from './layouts/MainLayout';
 import MessageList from './components/MessageList';
 import ChatInput from './components/ChatInput';
@@ -15,49 +17,28 @@ import './App.css';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
 import 'prismjs/components/prism-sql';
-import { DropdownMenu, Button, Flex } from '@radix-ui/themes';
 import { resetApplication } from './services/resetService';
 import DeleteConfirmationDialog from './components/DeleteConfirmationDialog';
-import { initSupabase, deployToSupabase } from './services/supabaseService';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { deployToSupabase } from './services/supabaseService';
 import Notification from './components/Notification';
 import LoadingModal from './components/LoadingModal';
+import { Background, Controls } from 'reactflow';
+import { ReactFlow } from 'reactflow';
 
 function App() {
+  const { supabase, isAuthenticated, isAuthLoading, handleLogout } = useSupabaseAuth();
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, updateGraph } = useGraph();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('diagram');
   const [sqlScript, setSqlScript] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
   const [notification, setNotification] = useState<{
     message: string;
     type: 'success' | 'error';
   } | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentStep, setDeploymentStep] = useState(1);
-
-  useEffect(() => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Missing Supabase environment variables:', {
-        url: !!supabaseUrl,
-        key: !!supabaseAnonKey
-      });
-      return;
-    }
-
-    try {
-      const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-      setSupabase(supabaseClient);
-      console.log('Supabase client initialized successfully');
-    } catch (error) {
-      console.error('Error initializing Supabase client:', error);
-    }
-  }, []);
 
   const handleReset = () => {
     setIsDeleteDialogOpen(true);
@@ -198,136 +179,96 @@ function App() {
   }, [sqlScript, activeTab]);
 
   return (
-    <MainLayout>
-      <div className="chat-section">
-        <h1 className="chat-title">IA Diagram Chat</h1>
-        <MessageList messages={messages} isLoading={isLoading} />
-        <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
-      </div>
-      <div className="content-section">
-        <div className="tabs">
-          <div className="tabs-left">
-            <button
-              className={`tab ${activeTab === 'diagram' ? 'active' : ''}`}
-              onClick={() => setActiveTab('diagram')}
-            >
-              Diagram
-            </button>
-            <button
-              className={`tab ${activeTab === 'migrations' ? 'active' : ''}`}
-              onClick={() => sqlScript ? setActiveTab('migrations') : null}
-              disabled={!sqlScript}
-              style={{ 
-                opacity: sqlScript ? 1 : 0.5,
-                cursor: sqlScript ? 'pointer' : 'not-allowed'
-              }}
-            >
-              Migrations
-            </button>
-          </div>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-              <Button 
-                variant="ghost" 
-                size="2"
+    <AuthWrapper
+      isLoading={isAuthLoading}
+      isAuthenticated={isAuthenticated}
+      supabase={supabase}
+    >
+      <MainLayout>
+        <div className="chat-section">
+          <h1 className="chat-title">IA Diagram Chat</h1>
+          <MessageList messages={messages} isLoading={isLoading} />
+          <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
+        </div>
+        <div className="content-section">
+          <div className="tabs">
+            <div className="tabs-left">
+              <button
+                className={`tab ${activeTab === 'diagram' ? 'active' : ''}`}
+                onClick={() => setActiveTab('diagram')}
+              >
+                Diagram
+              </button>
+              <button
+                className={`tab ${activeTab === 'migrations' ? 'active' : ''}`}
+                onClick={() => sqlScript ? setActiveTab('migrations') : null}
+                disabled={!sqlScript}
                 style={{ 
-                  padding: '8px',
-                  color: '#888',
-                  cursor: 'pointer',
+                  opacity: sqlScript ? 1 : 0.5,
+                  cursor: sqlScript ? 'pointer' : 'not-allowed'
                 }}
               >
-                <svg 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 16 16" 
-                  fill="currentColor"
-                  style={{ transform: 'rotate(90deg)' }}
-                >
-                  <path d="M8 2a1 1 0 110-2 1 1 0 010 2zM8 9a1 1 0 110-2 1 1 0 010 2zM8 16a1 1 0 110-2 1 1 0 010 2z"/>
-                </svg>
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Item onClick={handleDownloadSQL} disabled={!sqlScript}>
-                <Flex gap="2" align="center">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                    <path d="M7 10l5 5 5-5"/>
-                    <path d="M12 15V3"/>
-                  </svg>
-                  Download SQL
-                </Flex>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item color="red" onClick={handleReset}>
-                <Flex gap="2" align="center">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 6h18"/>
-                    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/>
-                    <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-                  </svg>
-                  Reset All
-                </Flex>
-              </DropdownMenu.Item>
-              <DropdownMenu.Item onClick={handleSupabaseDeployment} disabled={!sqlScript}>
-                <Flex gap="2" align="center">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/>
-                  </svg>
-                  Deploy to Supabase
-                </Flex>
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-        </div>
-
-        <TabPanel value="diagram" activeTab={activeTab}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={NODE_TYPES}
-            fitView
-            {...FLOW_CONFIG}
-            defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
-          >
-            <Background />
-            <Controls />
-          </ReactFlow>
-        </TabPanel>
-
-        <TabPanel value="migrations" activeTab={activeTab}>
-          <div className="sql-panel">
-            <div className="sql-header">
-              <h3>SQL Migration Script</h3>
-              <button onClick={() => navigator.clipboard.writeText(sqlScript)}>
-                Copy to Clipboard
+                Migrations
               </button>
             </div>
-            <pre className="language-sql">
-              <code>{sqlScript}</code>
-            </pre>
+            <ToolbarButtons
+              onDeploy={handleSupabaseDeployment}
+              onDownload={handleDownloadSQL}
+              onReset={handleReset}
+              onLogout={handleLogout}
+              sqlScript={sqlScript}
+            />
           </div>
-        </TabPanel>
-      </div>
-      <DeleteConfirmationDialog 
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={handleConfirmReset}
-      />
-      {notification && (
-        <Notification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification(null)}
+
+          <TabPanel value="diagram" activeTab={activeTab}>
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              nodeTypes={NODE_TYPES}
+              fitView
+              {...FLOW_CONFIG}
+              defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
+            >
+              <Background />
+              <Controls />
+            </ReactFlow>
+          </TabPanel>
+
+          <TabPanel value="migrations" activeTab={activeTab}>
+            <div className="sql-panel">
+              <div className="sql-header">
+                <h3>SQL Migration Script</h3>
+                <button onClick={() => navigator.clipboard.writeText(sqlScript)}>
+                  Copy to Clipboard
+                </button>
+              </div>
+              <pre className="language-sql">
+                <code>{sqlScript}</code>
+              </pre>
+            </div>
+          </TabPanel>
+        </div>
+        <DeleteConfirmationDialog 
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onConfirm={handleConfirmReset}
         />
-      )}
-      <LoadingModal 
-        isOpen={isDeploying}
-        currentStep={deploymentStep}
-      />
-    </MainLayout>
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
+        )}
+        <LoadingModal 
+          isOpen={isDeploying}
+          currentStep={deploymentStep}
+        />
+      </MainLayout>
+    </AuthWrapper>
   );
 }
 

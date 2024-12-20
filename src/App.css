@@ -662,3 +662,21 @@ code[class*="language-"] {
     opacity: 1;
   }
 }
+
+.logout-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 50;
+  transition: all 0.2s ease;
+}
+
+.logout-button:hover {
+  opacity: 0.8;
+}
+
+.tabs-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
