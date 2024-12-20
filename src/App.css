@@ -186,23 +186,28 @@
 }
 
 .react-flow__edge-path {
-  stroke: #444;
-  stroke-width: 1.5;
+  stroke: rgb(34, 255, 158) !important;
+  stroke-width: 2;
   stroke-dasharray: 5;
   animation: flowAnimation 1s linear infinite;
 }
 
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: #646cff;
-  stroke-width: 2;
+  stroke: rgb(4, 255, 134) !important;
+  stroke-width: 3;
 }
 
 @keyframes flowAnimation {
   from {
     stroke-dashoffset: 20;
+    filter: brightness(1.2);
+  }
+  50% {
+    filter: brightness(1.5);
   }
   to {
     stroke-dashoffset: 0;
+    filter: brightness(1.2);
   }
 }
 
@@ -705,4 +710,21 @@ code[class*="language-"] {
 
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Ajouter un effet de glow pour les lignes */
+.react-flow__edge {
+  filter: drop-shadow(0 0 2px rgb(34, 255, 158 / 0.4))
+         drop-shadow(0 0 4px rgb(34, 255, 158 / 0.3))
+         drop-shadow(0 0 6px rgb(34, 255, 158 / 0.2));
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
 }

@@ -20,8 +20,11 @@ const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
   const [sqlContent, setSqlContent] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [loadingTemplate, setLoadingTemplate] = useState<string | null>(null);
+
   const handleTemplateClick = async (template: string) => {
     try {
+      setLoadingTemplate(template);
       const response = await fetch('http://localhost:11434/api/generate', {
         method: 'POST',
         headers: {
@@ -43,6 +46,8 @@ const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
     } catch (error) {
       console.error('Error generating prompt:', error);
       setInput(`Create a ${template} with users, messages, and core features.`);
+    } finally {
+      setLoadingTemplate(null);
     }
   };
 
@@ -91,39 +96,90 @@ const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
         </Text>
       </Box>
 
-      <Flex wrap="wrap" gap="2" mb="4">
+      <Flex gap="2" mb="4" direction="row">
         {PROMPT_TEMPLATES.map((template, index) => (
           <Button
             key={index}
             variant="surface"
             onClick={() => handleTemplateClick(template)}
-            disabled={isLoading}
-            style={{ 
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              color: 'var(--gray-11)',
-              borderRadius: '9999px',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s',
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-            }}
+            disabled={isLoading || loadingTemplate !== null}
+            className={`
+              bg-black/20
+              text-gray-300
+              border
+              border-[rgb(34,255,158,0.3)]
+              rounded-full
+              px-3
+              py-1
+              h-[28px]
+              flex
+              items-center
+              justify-center
+              min-w-[85px]
+              text-xs
+              whitespace-nowrap
+              cursor-pointer
+              transition-all
+              duration-300
+              shadow-[0_0_5px_rgba(34,255,158,0.2)]
+              hover:bg-black/30
+              hover:border-[rgb(34,255,158,0.5)]
+              hover:shadow-[0_0_8px_rgba(34,255,158,0.3),inset_0_0_2px_rgba(34,255,158,0.3)]
+              hover:text-gray-200
+              disabled:opacity-50
+              disabled:cursor-not-allowed
+              disabled:hover:bg-black/20
+              disabled:hover:border-[rgb(34,255,158,0.3)]
+            `}
           >
-            {template}
+            <div className="flex items-center justify-center gap-1.5 w-full">
+              <span className="text-center">{template}</span>
+              <div className="w-3 h-3 relative flex-shrink-0">
+                {loadingTemplate === template ? (
+                  <>
+                    <div className="absolute inset-0 border-[1px] border-transparent border-t-[rgb(34,255,158)] rounded-full animate-spin" />
+                    <div className="absolute inset-0 border-[1px] border-[rgb(34,255,158,0.3)] rounded-full" />
+                  </>
+                ) : <div className="w-3 h-3" />}
+              </div>
+            </div>
           </Button>
         ))}
       </Flex>
 
       <form onSubmit={handleSubmit}>
         <Box position="relative">
+          <TextArea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={selectedFile ? "" : "Message AI or paste SQL"}
+            className={`
+              min-h-[100px] 
+              bg-[#1a1a1a] 
+              border 
+              border-[rgb(34,255,158,0.2)] 
+              rounded-xl 
+              p-4 
+              ${selectedFile ? 'pt-12' : 'pt-4'}
+              text-[var(--gray-11)] 
+              text-sm
+              transition-all 
+              duration-300
+              shadow-[0_0_5px_rgba(34,255,158,0.1),inset_0_0_5px_rgba(34,255,158,0.1)]
+              focus:outline-none 
+              focus:border-[rgb(34,255,158,0.4)]
+              focus:shadow-[0_0_10px_rgba(34,255,158,0.2),inset_0_0_10px_rgba(34,255,158,0.1)]
+              disabled:opacity-50
+              disabled:cursor-not-allowed
+            `}
+            disabled={isLoading}
+          />
+          
           {selectedFile && (
             <Flex 
               align="center" 
               gap="2"
-              className="absolute top-3 left-3 w-[150px] z-10 bg-[rgba(255,255,255,0.05)] rounded-md px-2 py-2"
+              className="absolute top-3 left-3 bg-[rgba(255,255,255,0.05)] rounded-md px-2 py-1.5 w-fit"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -144,22 +200,7 @@ const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
               </Button>
             </Flex>
           )}
-          <TextArea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={selectedFile ? "" : "Message AI or paste SQL"}
-            style={{
-              minHeight: '100px',
-              backgroundColor: '#1a1a1a',
-              border: '1px solid var(--gray-7)',
-              borderRadius: '12px',
-              padding: '16px',
-              paddingLeft: selectedFile ? '170px' : '16px',
-              color: 'var(--gray-11)',
-              fontSize: '14px'
-            }}
-            disabled={isLoading}
-          />
+          
           <Flex 
             position="absolute" 
             bottom="3" 
