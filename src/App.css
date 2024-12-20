@@ -680,3 +680,29 @@ code[class*="language-"] {
   align-items: center;
   gap: 0.5rem;
 }
+
+/* Ajoutez ces styles pour l'animation du bouton */
+.group:hover .absolute {
+  transform: translateX(4px);
+}
+
+/* Animation de fondu pour le texte */
+.text-gradient {
+  background: linear-gradient(to right, #646cff, #4ec9b0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Animation du loader */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

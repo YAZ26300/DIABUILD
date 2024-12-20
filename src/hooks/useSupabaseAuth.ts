@@ -6,6 +6,20 @@ export const useSupabaseAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
+  const checkAuth = async (supabaseClient: SupabaseClient) => {
+    try {
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      if (error) throw error;
+      
+      setIsAuthenticated(!!session);
+    } catch (error) {
+      console.error('Error checking auth:', error);
+      setIsAuthenticated(false);
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
   useEffect(() => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -20,20 +34,16 @@ export const useSupabaseAuth = () => {
       const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
       setSupabase(supabaseClient);
       
-      const checkAuth = async () => {
-        try {
-          const { data: { user }, error } = await supabaseClient.auth.getUser();
-          if (error) throw error;
-          setIsAuthenticated(!!user);
-        } catch (error) {
-          console.error('Error checking auth:', error);
-          setIsAuthenticated(false);
-        } finally {
-          setIsAuthLoading(false);
-        }
-      };
+      checkAuth(supabaseClient);
+      
+      // Écouter les changements d'auth
+      const {
+        data: { subscription },
+      } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+        setIsAuthenticated(!!session);
+      });
 
-      checkAuth();
+      return () => subscription.unsubscribe();
     } catch (error) {
       console.error('Error initializing Supabase client:', error);
       setIsAuthLoading(false);

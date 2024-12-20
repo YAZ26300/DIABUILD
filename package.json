@@ -21,6 +21,8 @@
     "@types/prismjs": "^1.26.5",
     "@uiw/react-textarea-code-editor": "^3.1.0",
     "dagre": "^0.8.5",
+    "framer": "^2.4.1",
+    "framer-motion": "^11.15.0",
     "mermaid": "^11.4.1",
     "pdfjs-dist": "^4.9.155",
     "pg": "^8.13.1",
