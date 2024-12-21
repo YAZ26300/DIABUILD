@@ -62,11 +62,11 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Installation de npm 7
-RUN npm install -g npm@7
+# Mise à jour de npm vers la dernière version
+RUN npm install -g npm@latest
 
 COPY package*.json ./
-RUN npm install
+RUN npm install --force
 
 COPY . .
 
