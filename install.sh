@@ -106,13 +106,138 @@ cat > package.json << 'EOF'
 }
 EOF
 
+# Create src directory
+mkdir -p src
+
+# Create App.tsx
+cat > src/App.tsx << 'EOF'
+import React from 'react'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
+
+function App() {
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto py-6 px-4">
+          <h1 className="text-3xl font-bold text-gray-900">
+            IA Diagram Chat
+          </h1>
+        </div>
+      </header>
+      
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="bg-white shadow rounded-lg p-4">
+          <textarea
+            className="w-full p-2 border rounded"
+            placeholder="Décrivez votre schéma de base de données..."
+            rows={4}
+          />
+          <button
+            className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Générer
+          </button>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+export default App
+EOF
+
+# Create index.html
+cat > index.html << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IA Diagram Chat</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+EOF
+
+# Create main.tsx
+cat > src/main.tsx << 'EOF'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+EOF
+
+# Create index.css
+cat > src/index.css << 'EOF'
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+EOF
+
+# Create vite.config.ts
+cat > vite.config.ts << 'EOF'
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    host: true,
+    port: 5173
+  }
+})
+EOF
+
+# Create postcss.config.js
+cat > postcss.config.js << 'EOF'
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+EOF
+
+# Create tailwind.config.js
+cat > tailwind.config.js << 'EOF'
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+EOF
+
 # Get Supabase URL from user
 echo "Please enter your Supabase URL:"
 read -p "> " SUPABASE_URL
 
-# Use default values for other variables
-SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtYXZiY2Z1a2hmY3Boa3J1ZnBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ2MzkwMDEsImV4cCI6MjA1MDIxNTAwMX0.z2VY3RdV5YmZojehSpQWX5kfZWVwiZx6LssDkOAxpzk"
-GITHUB_CLIENT_ID="Ov23li3oU9zgcAdD0xMe"
+# Get Supabase Anon Key from user
+echo "Please enter your Supabase Anon Key:"
+read -p "> " SUPABASE_ANON_KEY
+
+# Get GitHub Client ID from user
+echo "Please enter your GitHub Client ID:"
+read -p "> " GITHUB_CLIENT_ID
 
 # Create .env file
 echo "Creating environment file..."
