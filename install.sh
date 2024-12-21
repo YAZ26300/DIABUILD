@@ -41,18 +41,60 @@ if ! command -v docker-compose &> /dev/null; then
     sudo chmod +x /usr/local/bin/docker-compose
 fi
 
-# Clone the project using HTTPS without authentication
-echo "Cloning the project..."
-git clone https://github.com/YAZ26300/DIABUILD.git || {
-    echo "Error: Failed to clone repository"
-    exit 1
-}
+# Create temporary directory
+TEMP_DIR=$(mktemp -d)
+cd "$TEMP_DIR" || exit 1
 
-# Change directory and verify
-cd DIABUILD || {
-    echo "Error: Failed to enter project directory"
-    exit 1
-}
+# Create necessary files
+echo "Creating project files..."
+
+# Create docker-compose.yml
+cat > docker-compose.yml << 'EOF'
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - VITE_GITHUB_CLIENT_ID=${VITE_GITHUB_CLIENT_ID}
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - ollama
+    command: sh -c "npm run dev -- --host"
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    command: sh -c "ollama pull llama3.2 && ollama serve"
+
+volumes:
+  ollama_data:
+EOF
+
+# Create Dockerfile
+cat > Dockerfile << 'EOF'
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev"]
+EOF
 
 # Request environment variables with validation
 echo "Environment Configuration..."
@@ -86,12 +128,6 @@ VITE_SUPABASE_ANON_KEY=$supabase_key
 VITE_GITHUB_CLIENT_ID=$github_client_id
 EOF
 
-# Verify docker-compose.yml exists
-if [ ! -f "docker-compose.yml" ]; then
-    echo "Error: docker-compose.yml not found"
-    exit 1
-fi
-
 # Launch Docker Compose
 echo "Starting the application..."
 docker-compose up --build -d || {
@@ -110,4 +146,6 @@ To access the application:
 
 To view logs: docker-compose logs -f
 To stop: docker-compose down
+
+Project installed in: $TEMP_DIR
 " 
