@@ -62,11 +62,12 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Mise à jour de npm vers la dernière version
-RUN npm install -g npm@latest
+# Mise à jour de npm vers la dernière version et configuration
+RUN npm install -g npm@latest && \\
+    npm config set legacy-peer-deps true
 
 COPY package*.json ./
-RUN npm install --force
+RUN npm install --legacy-peer-deps
 
 COPY . .
 
@@ -81,7 +82,9 @@ echo -e "${GREEN}Dockerfile créé avec succès!${NC}"
 cat > docker-compose.yml << EOF
 services:
   app:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "5173:5173"
     volumes:
@@ -91,6 +94,7 @@ services:
       - VITE_SUPABASE_URL=\${VITE_SUPABASE_URL}
       - VITE_SUPABASE_ANON_KEY=\${VITE_SUPABASE_ANON_KEY}
       - VITE_GITHUB_CLIENT_ID=\${VITE_GITHUB_CLIENT_ID}
+    command: npm run dev -- --host
 EOF
 
 echo -e "${GREEN}docker-compose.yml créé avec succès!${NC}"
