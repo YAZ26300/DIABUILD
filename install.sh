@@ -229,15 +229,37 @@ EOF
 
 # Get Supabase URL from user
 echo "Please enter your Supabase URL:"
+exec < /dev/tty
 read -p "> " SUPABASE_URL
+
+# Vérifier si l'URL est vide
+while [ -z "$SUPABASE_URL" ]; do
+  echo "URL cannot be empty. Please enter your Supabase URL:"
+  read -p "> " SUPABASE_URL
+done
 
 # Get Supabase Anon Key from user
 echo "Please enter your Supabase Anon Key:"
 read -p "> " SUPABASE_ANON_KEY
 
+# Vérifier si la clé est vide
+while [ -z "$SUPABASE_ANON_KEY" ]; do
+  echo "Anon Key cannot be empty. Please enter your Supabase Anon Key:"
+  read -p "> " SUPABASE_ANON_KEY
+done
+
 # Get GitHub Client ID from user
 echo "Please enter your GitHub Client ID:"
 read -p "> " GITHUB_CLIENT_ID
+
+# Vérifier si l'ID est vide
+while [ -z "$GITHUB_CLIENT_ID" ]; do
+  echo "Client ID cannot be empty. Please enter your GitHub Client ID:"
+  read -p "> " GITHUB_CLIENT_ID
+done
+
+# Restaurer l'entrée standard
+exec <&-
 
 # Create .env file
 echo "Creating environment file..."
