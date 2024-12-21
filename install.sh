@@ -3,10 +3,31 @@
 # Couleurs pour une meilleure lisibilité
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}Configuration de l'application IA Diagram Chat${NC}"
 echo "----------------------------------------"
+
+# Vérification de Git
+if ! command -v git &> /dev/null; then
+    echo -e "${RED}Git n'est pas installé. Veuillez installer Git avant de continuer.${NC}"
+    exit 1
+fi
+
+# Création du répertoire de travail
+WORK_DIR="ia-diagram-chat"
+if [ ! -d "$WORK_DIR" ]; then
+    echo -e "${BLUE}Clonage du projet...${NC}"
+    git clone https://github.com/YAZ26300/DIABUILD.git "$WORK_DIR"
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Erreur lors du clonage du projet${NC}"
+        exit 1
+    fi
+fi
+
+# Se déplacer dans le répertoire du projet
+cd "$WORK_DIR" || exit 1
 
 # Fonction pour demander une valeur avec une valeur par défaut
 ask_value() {
@@ -49,13 +70,19 @@ fi
 
 # Vérification de Docker
 if ! command -v docker &> /dev/null; then
-    echo "Docker n'est pas installé. Veuillez installer Docker avant de continuer."
+    echo -e "${RED}Docker n'est pas installé. Veuillez installer Docker avant de continuer.${NC}"
     exit 1
 fi
 
 # Vérification de Docker Compose
 if ! command -v docker-compose &> /dev/null; then
-    echo "Docker Compose n'est pas installé. Veuillez installer Docker Compose avant de continuer."
+    echo -e "${RED}Docker Compose n'est pas installé. Veuillez installer Docker Compose avant de continuer.${NC}"
+    exit 1
+fi
+
+# Vérification que Docker est en cours d'exécution
+if ! docker info >/dev/null 2>&1; then
+    echo -e "${RED}Docker n'est pas en cours d'exécution. Veuillez démarrer Docker avant de continuer.${NC}"
     exit 1
 fi
 
