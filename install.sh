@@ -12,18 +12,6 @@ die() {
     exit 1
 }
 
-# Fonction pour nettoyer en cas d'interruption
-cleanup() {
-    if [ ! -z "$TMP_DIR" ]; then
-        echo -e "\n${BLUE}Nettoyage...${NC}"
-        rm -rf "$TMP_DIR"
-    fi
-}
-
-# Capture des interruptions
-trap cleanup EXIT
-trap 'exit 1' SIGINT SIGTERM
-
 echo -e "${BLUE}Configuration de l'application IA Diagram Chat${NC}"
 echo "----------------------------------------"
 
@@ -33,58 +21,44 @@ command -v docker >/dev/null 2>&1 || die "Docker n'est pas installé. Veuillez i
 command -v docker-compose >/dev/null 2>&1 || die "Docker Compose n'est pas installé. Veuillez installer Docker Compose avant de continuer."
 docker info >/dev/null 2>&1 || die "Docker n'est pas en cours d'exécution. Veuillez démarrer Docker avant de continuer."
 
-# Création d'un répertoire temporaire
-TMP_DIR=$(mktemp -d)
-echo -e "${BLUE}Utilisation du répertoire temporaire: $TMP_DIR${NC}"
-
-# Clonage du projet dans le répertoire temporaire
-echo -e "${BLUE}Clonage du projet...${NC}"
-git clone https://github.com/YAZ26300/DIABUILD.git "$TMP_DIR/app" || die "Erreur lors du clonage du projet"
-
-# Se déplacer dans le répertoire du projet
-cd "$TMP_DIR/app" || die "Impossible d'accéder au répertoire temporaire"
-
-# Installation dans le répertoire final
+# Définition du répertoire d'installation
 INSTALL_DIR="$HOME/ia-diagram-chat"
 echo -e "${BLUE}Installation dans: $INSTALL_DIR${NC}"
 
-# Création du répertoire d'installation
+# Suppression de l'installation existante si nécessaire
 if [ -d "$INSTALL_DIR" ]; then
-    echo -e "${BLUE}Mise à jour de l'installation existante...${NC}"
+    echo -e "${BLUE}Suppression de l'installation existante...${NC}"
     rm -rf "$INSTALL_DIR"
 fi
 
-# Copie des fichiers
-mkdir -p "$INSTALL_DIR"
-cp -r . "$INSTALL_DIR/"
+# Clonage du projet
+echo -e "${BLUE}Clonage du projet...${NC}"
+git clone https://github.com/YAZ26300/DIABUILD.git "$INSTALL_DIR" || die "Erreur lors du clonage du projet"
 
 # Se déplacer dans le répertoire d'installation
 cd "$INSTALL_DIR" || die "Impossible d'accéder au répertoire d'installation"
 
+# Vérification des fichiers nécessaires
+[ ! -f "docker-compose.yml" ] && die "Fichier docker-compose.yml non trouvé"
+[ ! -f "package.json" ] && die "Fichier package.json non trouvé"
+
 # Configuration des variables d'environnement
 echo -e "${BLUE}Configuration des variables d'environnement...${NC}"
+echo -e "${GREEN}Configuration de l'application${NC}"
 
 # Demande des valeurs de configuration
-echo -e "${GREEN}Configuration de l'application${NC}"
 read -p "Entrez l'URL Supabase: " SUPABASE_URL
 read -p "Entrez la clé Supabase: " SUPABASE_KEY
 read -p "Entrez le Client ID GitHub: " GITHUB_CLIENT_ID
 
 # Création du fichier .env
-echo "VITE_SUPABASE_URL=${SUPABASE_URL}" > .env
-echo "VITE_SUPABASE_ANON_KEY=${SUPABASE_KEY}" >> .env
-echo "VITE_GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}" >> .env
+cat > .env << EOF
+VITE_SUPABASE_URL=$SUPABASE_URL
+VITE_SUPABASE_ANON_KEY=$SUPABASE_KEY
+VITE_GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID
+EOF
 
 echo -e "${GREEN}Fichier .env créé avec succès!${NC}"
-
-# Vérification des fichiers nécessaires
-if [ ! -f "docker-compose.yml" ]; then
-    die "Fichier docker-compose.yml non trouvé"
-fi
-
-if [ ! -f "package.json" ]; then
-    die "Fichier package.json non trouvé"
-fi
 
 # Lancement des conteneurs Docker
 echo -e "${BLUE}Démarrage des conteneurs Docker...${NC}"
