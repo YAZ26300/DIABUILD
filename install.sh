@@ -12,6 +12,15 @@ die() {
     exit 1
 }
 
+# Fonction pour nettoyer en cas d'interruption
+cleanup() {
+    echo -e "\n${RED}Installation interrompue${NC}"
+    exit 1
+}
+
+# Capture des interruptions
+trap cleanup SIGINT SIGTERM
+
 echo -e "${BLUE}Configuration de l'application IA Diagram Chat${NC}"
 echo "----------------------------------------"
 
@@ -28,7 +37,12 @@ command -v docker-compose >/dev/null 2>&1 || die "Docker Compose n'est pas insta
 docker info >/dev/null 2>&1 || die "Docker n'est pas en cours d'exécution. Veuillez démarrer Docker avant de continuer."
 
 # Création et déplacement dans le répertoire de travail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK_DIR="$HOME/ia-diagram-chat"
+
+echo -e "${BLUE}Installation dans: $WORK_DIR${NC}"
+
+# Téléchargement du projet
 if [ ! -d "$WORK_DIR" ]; then
     echo -e "${BLUE}Création du répertoire de travail...${NC}"
     mkdir -p "$WORK_DIR" || die "Impossible de créer le répertoire $WORK_DIR"
@@ -84,13 +98,21 @@ fi
 
 # Lancement des conteneurs Docker
 echo -e "${BLUE}Démarrage des conteneurs Docker...${NC}"
-docker-compose up -d || die "Erreur lors du démarrage des conteneurs Docker"
+if [ -f "docker-compose.yml" ]; then
+    docker-compose up -d || die "Erreur lors du démarrage des conteneurs Docker"
+else
+    die "Fichier docker-compose.yml non trouvé"
+fi
 
 # Installation des dépendances Node.js
 echo -e "${BLUE}Installation des dépendances...${NC}"
-npm install || die "Erreur lors de l'installation des dépendances npm"
+if [ -f "package.json" ]; then
+    npm install || die "Erreur lors de l'installation des dépendances npm"
+else
+    die "Fichier package.json non trouvé"
+fi
 
 # Démarrage de l'application
 echo -e "${GREEN}Installation terminée!${NC}"
 echo -e "${BLUE}Démarrage de l'application...${NC}"
-exec npm run dev
+npm run dev
