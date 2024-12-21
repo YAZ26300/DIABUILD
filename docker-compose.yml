@@ -17,9 +17,7 @@ services:
     command: sh -c "npm run dev -- --host"
 
   ollama:
-    build:
-      context: .
-      dockerfile: Dockerfile.ollama
+    image: ollama/ollama:latest
     ports:
       - "11434:11434"
     volumes:
