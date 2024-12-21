@@ -39,7 +39,6 @@ git clone https://github.com/YAZ26300/DIABUILD.git "$INSTALL_DIR" || die "Erreur
 cd "$INSTALL_DIR" || die "Impossible d'accéder au répertoire d'installation"
 
 # Vérification des fichiers nécessaires
-[ ! -f "docker-compose.yml" ] && die "Fichier docker-compose.yml non trouvé"
 [ ! -f "package.json" ] && die "Fichier package.json non trouvé"
 
 # Configuration des variables d'environnement
@@ -60,7 +59,7 @@ EOF
 
 echo -e "${GREEN}Fichier .env créé avec succès!${NC}"
 
-# Création d'un nouveau Dockerfile avec --legacy-peer-deps
+# Création d'un nouveau Dockerfile
 cat > Dockerfile << EOF
 FROM node:20-alpine
 
@@ -73,10 +72,28 @@ COPY . .
 
 EXPOSE 5173
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev", "--", "--host"]
 EOF
 
 echo -e "${GREEN}Dockerfile créé avec succès!${NC}"
+
+# Création du docker-compose.yml
+cat > docker-compose.yml << EOF
+services:
+  app:
+    build: .
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - VITE_SUPABASE_URL=\${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=\${VITE_SUPABASE_ANON_KEY}
+      - VITE_GITHUB_CLIENT_ID=\${VITE_GITHUB_CLIENT_ID}
+EOF
+
+echo -e "${GREEN}docker-compose.yml créé avec succès!${NC}"
 
 # Lancement des conteneurs Docker
 echo -e "${BLUE}Démarrage des conteneurs Docker...${NC}"
@@ -89,4 +106,5 @@ npm install --legacy-peer-deps || die "Erreur lors de l'installation des dépend
 # Démarrage de l'application
 echo -e "${GREEN}Installation terminée!${NC}"
 echo -e "${BLUE}Démarrage de l'application...${NC}"
+echo -e "${GREEN}L'application est accessible sur http://localhost:5173${NC}"
 exec npm run dev
