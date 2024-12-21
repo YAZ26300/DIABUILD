@@ -18,11 +18,11 @@ cleanup() {
         echo -e "\n${BLUE}Nettoyage...${NC}"
         rm -rf "$TMP_DIR"
     fi
-    exit 1
 }
 
 # Capture des interruptions
-trap cleanup SIGINT SIGTERM
+trap cleanup EXIT
+trap 'exit 1' SIGINT SIGTERM
 
 echo -e "${BLUE}Configuration de l'application IA Diagram Chat${NC}"
 echo "----------------------------------------"
@@ -39,10 +39,10 @@ echo -e "${BLUE}Utilisation du répertoire temporaire: $TMP_DIR${NC}"
 
 # Clonage du projet dans le répertoire temporaire
 echo -e "${BLUE}Clonage du projet...${NC}"
-git clone https://github.com/YAZ26300/DIABUILD.git "$TMP_DIR" || die "Erreur lors du clonage du projet"
+git clone https://github.com/YAZ26300/DIABUILD.git "$TMP_DIR/app" || die "Erreur lors du clonage du projet"
 
 # Se déplacer dans le répertoire du projet
-cd "$TMP_DIR" || die "Impossible d'accéder au répertoire temporaire"
+cd "$TMP_DIR/app" || die "Impossible d'accéder au répertoire temporaire"
 
 # Installation dans le répertoire final
 INSTALL_DIR="$HOME/ia-diagram-chat"
@@ -57,11 +57,9 @@ fi
 # Copie des fichiers
 mkdir -p "$INSTALL_DIR"
 cp -r . "$INSTALL_DIR/"
-cd "$INSTALL_DIR" || die "Impossible d'accéder au répertoire d'installation"
 
-# Vérification des fichiers nécessaires après la copie
-[ ! -f "docker-compose.yml" ] && die "Fichier docker-compose.yml non trouvé"
-[ ! -f "package.json" ] && die "Fichier package.json non trouvé"
+# Se déplacer dans le répertoire d'installation
+cd "$INSTALL_DIR" || die "Impossible d'accéder au répertoire d'installation"
 
 # Configuration des variables d'environnement
 echo -e "${BLUE}Configuration des variables d'environnement...${NC}"
@@ -73,13 +71,20 @@ read -p "Entrez la clé Supabase: " SUPABASE_KEY
 read -p "Entrez le Client ID GitHub: " GITHUB_CLIENT_ID
 
 # Création du fichier .env
-cat > .env << EOF
-VITE_SUPABASE_URL=${SUPABASE_URL}
-VITE_SUPABASE_ANON_KEY=${SUPABASE_KEY}
-VITE_GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
-EOF
+echo "VITE_SUPABASE_URL=${SUPABASE_URL}" > .env
+echo "VITE_SUPABASE_ANON_KEY=${SUPABASE_KEY}" >> .env
+echo "VITE_GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}" >> .env
 
 echo -e "${GREEN}Fichier .env créé avec succès!${NC}"
+
+# Vérification des fichiers nécessaires
+if [ ! -f "docker-compose.yml" ]; then
+    die "Fichier docker-compose.yml non trouvé"
+fi
+
+if [ ! -f "package.json" ]; then
+    die "Fichier package.json non trouvé"
+fi
 
 # Lancement des conteneurs Docker
 echo -e "${BLUE}Démarrage des conteneurs Docker...${NC}"
