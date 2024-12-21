@@ -13,40 +13,8 @@ if grep -qi microsoft /proc/version; then
         echo "1. Docker Desktop is installed and running"
         echo "2. WSL integration is enabled in Docker Desktop settings"
         echo "3. You've restarted your WSL terminal after enabling integration"
-        echo ""
-        echo "To fix:"
-        echo "1. Open Docker Desktop"
-        echo "2. Go to Settings > Resources > WSL Integration"
-        echo "3. Enable integration for your WSL distribution"
-        echo "4. Click Apply & Restart"
-        echo "5. Open a new WSL terminal and try again"
         exit 1
     fi
-else
-    # Docker installation for native Linux
-    if ! command -v docker &> /dev/null; then
-        echo "Docker is not installed. Installing Docker..."
-        curl -fsSL https://get.docker.com -o get-docker.sh
-        sudo sh get-docker.sh
-        sudo usermod -aG docker $USER
-        rm get-docker.sh
-    fi
-fi
-
-# Check if Docker is accessible
-if ! docker info &> /dev/null; then
-    echo "Error: Docker is not accessible."
-    echo "If you're using WSL, make sure that:"
-    echo "1. Docker Desktop is running"
-    echo "2. WSL integration is enabled in Docker Desktop"
-    exit 1
-fi
-
-# Check if Docker Compose is installed
-if ! command -v docker-compose &> /dev/null; then
-    echo "Docker Compose is not installed. Installing Docker Compose..."
-    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
 fi
 
 # Create temporary directory
@@ -141,96 +109,25 @@ cat > package.json << 'EOF'
 }
 EOF
 
-# Create vite.config.ts
-cat > vite.config.ts << 'EOF'
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: true,
-    port: 5173
-  }
-})
-EOF
-
-# Create index.html
-cat > index.html << 'EOF'
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IA Diagram Chat</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
-EOF
-
-# Create src directory and main file
-mkdir -p src
-cat > src/main.tsx << 'EOF'
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './index.css'
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
-EOF
-
-# Create basic CSS
-cat > src/index.css << 'EOF'
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-EOF
-
-# Request environment variables with validation
-echo "Environment Configuration..."
-
-while true; do
-    echo -n "Enter your Supabase URL: "
-    read supabase_url
-    [[ -n "$supabase_url" ]] && break
-    echo "Error: Supabase URL cannot be empty"
-done
-
-while true; do
-    echo -n "Enter your Supabase Anon Key: "
-    read supabase_key
-    [[ -n "$supabase_key" ]] && break
-    echo "Error: Supabase Anon Key cannot be empty"
-done
-
-while true; do
-    echo -n "Enter your GitHub Client ID: "
-    read github_client_id
-    [[ -n "$github_client_id" ]] && break
-    echo "Error: GitHub Client ID cannot be empty"
-done
+# Set default environment variables
+echo "Setting up environment variables..."
+SUPABASE_URL="https://umavbcfukhfcphkrufpo.supabase.co"
+SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtYXZiY2Z1a2hmY3Boa3J1ZnBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ2MzkwMDEsImV4cCI6MjA1MDIxNTAwMX0.z2VY3RdV5YmZojehSpQWX5kfZWVwiZx6LssDkOAxpzk"
+GITHUB_CLIENT_ID="Ov23li3oU9zgcAdD0xMe"
 
 # Create .env file
 echo "Creating environment file..."
 cat > .env << EOF
-VITE_SUPABASE_URL=$supabase_url
-VITE_SUPABASE_ANON_KEY=$supabase_key
-VITE_GITHUB_CLIENT_ID=$github_client_id
+VITE_SUPABASE_URL=$SUPABASE_URL
+VITE_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
+VITE_GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID
 EOF
+
+echo "Environment file created with default values ✓"
 
 # Launch Docker Compose
 echo "Starting the application..."
-docker-compose up --build -d || {
-    echo "Error: Failed to start Docker Compose"
-    exit 1
-}
+docker-compose up --build -d
 
 echo "
 Installation completed!
