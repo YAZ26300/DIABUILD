@@ -54,6 +54,7 @@ cat > package.json << EOF
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/themes": "^2.0.3",
     "@supabase/supabase-js": "^2.39.1",
     "framer-motion": "^10.13.1",
     "prismjs": "^1.29.0",
@@ -133,7 +134,6 @@ services:
       - VITE_SUPABASE_URL=\${VITE_SUPABASE_URL}
       - VITE_SUPABASE_ANON_KEY=\${VITE_SUPABASE_ANON_KEY}
       - VITE_GITHUB_CLIENT_ID=\${VITE_GITHUB_CLIENT_ID}
-    command: npm run dev -- --host
 EOF
 
 echo -e "${GREEN}docker-compose.yml créé avec succès!${NC}"
@@ -153,6 +153,6 @@ docker-compose up -d || die "Erreur lors du démarrage des conteneurs Docker"
 
 # Démarrage de l'application
 echo -e "${GREEN}Installation terminée!${NC}"
-echo -e "${BLUE}Démarrage de l'application...${NC}"
-echo -e "${GREEN}L'application est accessible sur http://localhost:5173${NC}"
-exec npm run dev
+echo -e "${BLUE}L'application est en cours de démarrage...${NC}"
+echo -e "${GREEN}L'application sera accessible sur http://localhost:5173${NC}"
+echo -e "${BLUE}Utilisez 'docker-compose logs -f' pour voir les logs${NC}"
