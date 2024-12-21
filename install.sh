@@ -38,6 +38,49 @@ git clone https://github.com/YAZ26300/DIABUILD.git "$INSTALL_DIR" || die "Erreur
 # Se déplacer dans le répertoire d'installation
 cd "$INSTALL_DIR" || die "Impossible d'accéder au répertoire d'installation"
 
+# Mise à jour du package.json pour résoudre les conflits de dépendances
+echo -e "${BLUE}Mise à jour des dépendances...${NC}"
+cat > package.json << EOF
+{
+  "name": "ia-diagram-chat",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@supabase/supabase-js": "^2.39.1",
+    "framer-motion": "^10.13.1",
+    "prismjs": "^1.29.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "reactflow": "^11.10.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@types/prismjs": "^1.26.3",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@typescript-eslint/eslint-plugin": "8.18.1",
+    "@typescript-eslint/parser": "8.18.1",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8"
+  }
+}
+EOF
+
 # Configuration des variables d'environnement
 echo -e "${BLUE}Configuration des variables d'environnement...${NC}"
 echo -e "${GREEN}Configuration de l'application${NC}"
@@ -62,12 +105,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Mise à jour de npm vers la dernière version et configuration
-RUN npm install -g npm@latest && \\
-    npm config set legacy-peer-deps true
-
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install
 
 COPY . .
 
