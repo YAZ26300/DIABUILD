@@ -19,8 +19,8 @@ A web application for creating database diagrams using AI.
 
 ### 1. Clone the project
 ```bash
-git clone https://github.com/your-username/ia-diagram-chat.git
-cd ia-diagram-chat
+git clone https://github.com/YAZ26300/DIABUILD.git
+cd DIABUILD
 ```
 
 ### 2. Install dependencies
