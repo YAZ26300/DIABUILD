@@ -21,6 +21,18 @@ cd "$TEMP_DIR" || exit 1
 # Create necessary files
 echo "Creating project files..."
 
+# Function to find available port
+find_available_port() {
+    local port=5173
+    while nc -z localhost $port 2>/dev/null; do
+        port=$((port + 1))
+    done
+    echo $port
+}
+
+# Get available port
+PORT=$(find_available_port)
+
 # Create docker-compose.yml
 cat > docker-compose.yml << 'EOF'
 version: '3.8'
@@ -29,7 +41,7 @@ services:
   app:
     build: .
     ports:
-      - "5173:5173"
+      - "${PORT}:5173"
     environment:
       - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
       - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
@@ -111,15 +123,79 @@ mkdir -p src
 
 # Create App.tsx
 cat > src/App.tsx << 'EOF'
-import React from 'react'
+import React, { useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-)
-
 function App() {
+  const [config, setConfig] = useState({
+    supabaseUrl: '',
+    supabaseKey: '',
+    githubClientId: ''
+  })
+
+  const [isConfigured, setIsConfigured] = useState(false)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    localStorage.setItem('config', JSON.stringify(config))
+    setIsConfigured(true)
+  }
+
+  if (!isConfigured) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
+          <h2 className="text-2xl font-bold mb-4">Configuration</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Supabase URL</label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  value={config.supabaseUrl}
+                  onChange={(e) => setConfig({...config, supabaseUrl: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Supabase Anon Key</label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  value={config.supabaseKey}
+                  onChange={(e) => setConfig({...config, supabaseKey: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">GitHub Client ID</label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  value={config.githubClientId}
+                  onChange={(e) => setConfig({...config, githubClientId: e.target.value})}
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+                Save Configuration
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  const supabase = createClient(
+    config.supabaseUrl,
+    config.supabaseKey
+  )
+
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
@@ -233,10 +309,10 @@ docker-compose up --build -d
 
 echo "
 Installation completed!
-The application is available at http://localhost:5173
+The application is available at http://localhost:${PORT}
 
 To access the application:
-1. Open http://localhost:5173 in your browser
+1. Open http://localhost:${PORT} in your browser
 2. Login with GitHub
 3. Start creating your database schemas!
 
