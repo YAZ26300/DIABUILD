@@ -1,0 +1,4 @@
+FROM ollama/ollama:latest
+
+# Pré-télécharger le modèle llama3.2
+CMD ["ollama", "serve"] 
