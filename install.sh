@@ -14,7 +14,10 @@ die() {
 
 # Fonction pour nettoyer en cas d'interruption
 cleanup() {
-    echo -e "\n${RED}Installation interrompue${NC}"
+    if [ ! -z "$TMP_DIR" ]; then
+        echo -e "\n${BLUE}Nettoyage...${NC}"
+        rm -rf "$TMP_DIR"
+    fi
     exit 1
 }
 
@@ -34,57 +37,12 @@ docker info >/dev/null 2>&1 || die "Docker n'est pas en cours d'exécution. Veui
 TMP_DIR=$(mktemp -d)
 echo -e "${BLUE}Utilisation du répertoire temporaire: $TMP_DIR${NC}"
 
-# Nettoyage à la sortie
-cleanup() {
-    echo -e "\n${BLUE}Nettoyage...${NC}"
-    rm -rf "$TMP_DIR"
-    exit 1
-}
-trap cleanup EXIT
-
 # Clonage du projet dans le répertoire temporaire
 echo -e "${BLUE}Clonage du projet...${NC}"
 git clone https://github.com/YAZ26300/DIABUILD.git "$TMP_DIR" || die "Erreur lors du clonage du projet"
 
 # Se déplacer dans le répertoire du projet
 cd "$TMP_DIR" || die "Impossible d'accéder au répertoire temporaire"
-
-# Fonction pour demander une valeur
-ask_value() {
-    local prompt=$1
-    local default=$2
-    local value
-
-    echo -e "${GREEN}$prompt${NC}"
-    if [ ! -z "$default" ]; then
-        echo -n "[$default]: "
-    fi
-    read value
-    echo
-
-    if [ -z "$value" ] && [ ! -z "$default" ]; then
-        echo "$default"
-    else
-        echo "$value"
-    fi
-}
-
-# Création du fichier .env s'il n'existe pas
-if [ ! -f .env ]; then
-    echo "Configuration des variables d'environnement..."
-    
-    SUPABASE_URL=$(ask_value "Entrez l'URL Supabase")
-    SUPABASE_KEY=$(ask_value "Entrez la clé Supabase")
-    GITHUB_CLIENT_ID=$(ask_value "Entrez le Client ID GitHub")
-
-    cat > .env << EOF
-VITE_SUPABASE_URL=$SUPABASE_URL
-VITE_SUPABASE_ANON_KEY=$SUPABASE_KEY
-VITE_GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID
-EOF
-
-    echo -e "${GREEN}Fichier .env créé avec succès!${NC}"
-fi
 
 # Vérification des fichiers nécessaires
 [ ! -f "docker-compose.yml" ] && die "Fichier docker-compose.yml non trouvé"
@@ -104,6 +62,25 @@ fi
 mkdir -p "$INSTALL_DIR"
 cp -r . "$INSTALL_DIR/"
 cd "$INSTALL_DIR" || die "Impossible d'accéder au répertoire d'installation"
+
+# Configuration des variables d'environnement
+echo -e "${BLUE}Configuration des variables d'environnement...${NC}"
+cat > .env << EOF
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_GITHUB_CLIENT_ID=
+EOF
+
+# Demande des valeurs de configuration
+echo -e "${GREEN}Configuration de l'application${NC}"
+read -p "Entrez l'URL Supabase: " SUPABASE_URL
+read -p "Entrez la clé Supabase: " SUPABASE_KEY
+read -p "Entrez le Client ID GitHub: " GITHUB_CLIENT_ID
+
+# Mise à jour du fichier .env
+sed -i "s|VITE_SUPABASE_URL=|VITE_SUPABASE_URL=$SUPABASE_URL|" .env
+sed -i "s|VITE_SUPABASE_ANON_KEY=|VITE_SUPABASE_ANON_KEY=$SUPABASE_KEY|" .env
+sed -i "s|VITE_GITHUB_CLIENT_ID=|VITE_GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID|" .env
 
 # Lancement des conteneurs Docker
 echo -e "${BLUE}Démarrage des conteneurs Docker...${NC}"
