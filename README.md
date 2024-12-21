@@ -4,6 +4,11 @@ A web application that generates database schemas from natural language descript
 
 ## Prerequisites
 
+### Windows Users
+1. Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
+2. Enable WSL 2 integration in Docker Desktop settings
+3. Make sure Docker Desktop is running before installation
+
 ### Option 1: Local Installation
 1. **Supabase**
    - Create an account on [Supabase](https://supabase.com)
@@ -55,7 +60,7 @@ A web application that generates database schemas from natural language descript
 
 ### Option 0: One-Line Installation (Linux/MacOS)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/your-username/ia-diagram-chat/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/JOBOYA/ia-diagram-chat/main/install.sh | bash
 ```
 This will:
 - Install Docker if needed
