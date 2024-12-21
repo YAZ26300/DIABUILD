@@ -60,8 +60,23 @@ EOF
 
 echo -e "${GREEN}Fichier .env créé avec succès!${NC}"
 
-# Modification du Dockerfile pour utiliser --legacy-peer-deps
-sed -i 's/RUN npm install/RUN npm install --legacy-peer-deps/g' Dockerfile
+# Création d'un nouveau Dockerfile avec --legacy-peer-deps
+cat > Dockerfile << EOF
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
+
+COPY . .
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev"]
+EOF
+
+echo -e "${GREEN}Dockerfile créé avec succès!${NC}"
 
 # Lancement des conteneurs Docker
 echo -e "${BLUE}Démarrage des conteneurs Docker...${NC}"
