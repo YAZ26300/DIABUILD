@@ -41,6 +41,10 @@ cd "$INSTALL_DIR" || die "Impossible d'accéder au répertoire d'installation"
 # Vérification des fichiers nécessaires
 [ ! -f "package.json" ] && die "Fichier package.json non trouvé"
 
+# Mise à jour des dépendances dans package.json
+echo -e "${BLUE}Mise à jour des dépendances...${NC}"
+sed -i 's/"framer": "^2.4.1"/"framer": "^2.4.1","framer-motion": "^10.13.1"/g' package.json
+
 # Configuration des variables d'environnement
 echo -e "${BLUE}Configuration des variables d'environnement...${NC}"
 echo -e "${GREEN}Configuration de l'application${NC}"
@@ -66,7 +70,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install
 
 COPY . .
 
@@ -95,13 +99,22 @@ EOF
 
 echo -e "${GREEN}docker-compose.yml créé avec succès!${NC}"
 
-# Lancement des conteneurs Docker
-echo -e "${BLUE}Démarrage des conteneurs Docker...${NC}"
-docker-compose up -d || die "Erreur lors du démarrage des conteneurs Docker"
+# Création du .dockerignore
+cat > .dockerignore << EOF
+node_modules
+npm-debug.log
+EOF
+
+echo -e "${GREEN}.dockerignore créé avec succès!${NC}"
 
 # Installation des dépendances Node.js localement
 echo -e "${BLUE}Installation des dépendances...${NC}"
-npm install --legacy-peer-deps || die "Erreur lors de l'installation des dépendances npm"
+npm install || die "Erreur lors de l'installation des dépendances npm"
+
+# Construction et démarrage des conteneurs Docker
+echo -e "${BLUE}Construction et démarrage des conteneurs Docker...${NC}"
+docker-compose build --no-cache || die "Erreur lors de la construction des conteneurs Docker"
+docker-compose up -d || die "Erreur lors du démarrage des conteneurs Docker"
 
 # Démarrage de l'application
 echo -e "${GREEN}Installation terminée!${NC}"
