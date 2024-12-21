@@ -44,10 +44,6 @@ git clone https://github.com/YAZ26300/DIABUILD.git "$TMP_DIR" || die "Erreur lor
 # Se déplacer dans le répertoire du projet
 cd "$TMP_DIR" || die "Impossible d'accéder au répertoire temporaire"
 
-# Vérification des fichiers nécessaires
-[ ! -f "docker-compose.yml" ] && die "Fichier docker-compose.yml non trouvé"
-[ ! -f "package.json" ] && die "Fichier package.json non trouvé"
-
 # Installation dans le répertoire final
 INSTALL_DIR="$HOME/ia-diagram-chat"
 echo -e "${BLUE}Installation dans: $INSTALL_DIR${NC}"
@@ -63,13 +59,12 @@ mkdir -p "$INSTALL_DIR"
 cp -r . "$INSTALL_DIR/"
 cd "$INSTALL_DIR" || die "Impossible d'accéder au répertoire d'installation"
 
+# Vérification des fichiers nécessaires après la copie
+[ ! -f "docker-compose.yml" ] && die "Fichier docker-compose.yml non trouvé"
+[ ! -f "package.json" ] && die "Fichier package.json non trouvé"
+
 # Configuration des variables d'environnement
 echo -e "${BLUE}Configuration des variables d'environnement...${NC}"
-cat > .env << EOF
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
-VITE_GITHUB_CLIENT_ID=
-EOF
 
 # Demande des valeurs de configuration
 echo -e "${GREEN}Configuration de l'application${NC}"
@@ -77,10 +72,14 @@ read -p "Entrez l'URL Supabase: " SUPABASE_URL
 read -p "Entrez la clé Supabase: " SUPABASE_KEY
 read -p "Entrez le Client ID GitHub: " GITHUB_CLIENT_ID
 
-# Mise à jour du fichier .env
-sed -i "s|VITE_SUPABASE_URL=|VITE_SUPABASE_URL=$SUPABASE_URL|" .env
-sed -i "s|VITE_SUPABASE_ANON_KEY=|VITE_SUPABASE_ANON_KEY=$SUPABASE_KEY|" .env
-sed -i "s|VITE_GITHUB_CLIENT_ID=|VITE_GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID|" .env
+# Création du fichier .env
+cat > .env << EOF
+VITE_SUPABASE_URL=${SUPABASE_URL}
+VITE_SUPABASE_ANON_KEY=${SUPABASE_KEY}
+VITE_GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+EOF
+
+echo -e "${GREEN}Fichier .env créé avec succès!${NC}"
 
 # Lancement des conteneurs Docker
 echo -e "${BLUE}Démarrage des conteneurs Docker...${NC}"
