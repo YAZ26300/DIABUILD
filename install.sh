@@ -9,10 +9,7 @@ if grep -qi microsoft /proc/version; then
         echo "Docker Desktop is running and accessible ✓"
     else
         echo "Error: Docker is not accessible in WSL."
-        echo "Please ensure:"
-        echo "1. Docker Desktop is installed and running"
-        echo "2. WSL integration is enabled in Docker Desktop settings"
-        echo "3. You've restarted your WSL terminal after enabling integration"
+        echo "Please ensure Docker Desktop is running and WSL integration is enabled"
         exit 1
     fi
 fi
@@ -109,9 +106,11 @@ cat > package.json << 'EOF'
 }
 EOF
 
-# Set default environment variables
-echo "Setting up environment variables..."
-SUPABASE_URL="https://umavbcfukhfcphkrufpo.supabase.co"
+# Get Supabase URL from user
+echo "Please enter your Supabase URL:"
+read -p "> " SUPABASE_URL
+
+# Use default values for other variables
 SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtYXZiY2Z1a2hmY3Boa3J1ZnBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ2MzkwMDEsImV4cCI6MjA1MDIxNTAwMX0.z2VY3RdV5YmZojehSpQWX5kfZWVwiZx6LssDkOAxpzk"
 GITHUB_CLIENT_ID="Ov23li3oU9zgcAdD0xMe"
 
@@ -123,7 +122,7 @@ VITE_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 VITE_GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID
 EOF
 
-echo "Environment file created with default values ✓"
+echo "Environment file created ✓"
 
 # Launch Docker Compose
 echo "Starting the application..."
