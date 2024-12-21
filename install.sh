@@ -60,13 +60,16 @@ EOF
 
 echo -e "${GREEN}Fichier .env créé avec succès!${NC}"
 
+# Modification du Dockerfile pour utiliser --legacy-peer-deps
+sed -i 's/RUN npm install/RUN npm install --legacy-peer-deps/g' Dockerfile
+
 # Lancement des conteneurs Docker
 echo -e "${BLUE}Démarrage des conteneurs Docker...${NC}"
 docker-compose up -d || die "Erreur lors du démarrage des conteneurs Docker"
 
-# Installation des dépendances Node.js
+# Installation des dépendances Node.js localement
 echo -e "${BLUE}Installation des dépendances...${NC}"
-npm install || die "Erreur lors de l'installation des dépendances npm"
+npm install --legacy-peer-deps || die "Erreur lors de l'installation des dépendances npm"
 
 # Démarrage de l'application
 echo -e "${GREEN}Installation terminée!${NC}"
