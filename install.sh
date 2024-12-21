@@ -41,9 +41,48 @@ cd "$INSTALL_DIR" || die "Impossible d'accéder au répertoire d'installation"
 # Vérification des fichiers nécessaires
 [ ! -f "package.json" ] && die "Fichier package.json non trouvé"
 
-# Mise à jour des dépendances dans package.json
-echo -e "${BLUE}Mise à jour des dépendances...${NC}"
-sed -i 's/"framer": "^2.4.1"/"framer": "^2.4.1","framer-motion": "^10.13.1"/g' package.json
+# Mise à jour du package.json
+echo -e "${BLUE}Mise à jour du package.json...${NC}"
+cat > package.json << EOF
+{
+  "name": "ia-diagram-chat",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@supabase/supabase-js": "^2.39.1",
+    "framer-motion": "^10.13.1",
+    "prismjs": "^1.29.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "reactflow": "^11.10.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@types/prismjs": "^1.26.3",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8"
+  }
+}
+EOF
 
 # Configuration des variables d'environnement
 echo -e "${BLUE}Configuration des variables d'environnement...${NC}"
@@ -106,10 +145,6 @@ npm-debug.log
 EOF
 
 echo -e "${GREEN}.dockerignore créé avec succès!${NC}"
-
-# Installation des dépendances Node.js localement
-echo -e "${BLUE}Installation des dépendances...${NC}"
-npm install || die "Erreur lors de l'installation des dépendances npm"
 
 # Construction et démarrage des conteneurs Docker
 echo -e "${BLUE}Construction et démarrage des conteneurs Docker...${NC}"
