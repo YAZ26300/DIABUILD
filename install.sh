@@ -24,38 +24,30 @@ trap cleanup SIGINT SIGTERM
 echo -e "${BLUE}Configuration de l'application IA Diagram Chat${NC}"
 echo "----------------------------------------"
 
-# Vérification de Git
+# Vérification des prérequis
 command -v git >/dev/null 2>&1 || die "Git n'est pas installé. Veuillez installer Git avant de continuer."
-
-# Vérification de Docker
 command -v docker >/dev/null 2>&1 || die "Docker n'est pas installé. Veuillez installer Docker avant de continuer."
-
-# Vérification de Docker Compose
 command -v docker-compose >/dev/null 2>&1 || die "Docker Compose n'est pas installé. Veuillez installer Docker Compose avant de continuer."
-
-# Vérification que Docker est en cours d'exécution
 docker info >/dev/null 2>&1 || die "Docker n'est pas en cours d'exécution. Veuillez démarrer Docker avant de continuer."
 
-# Création et déplacement dans le répertoire de travail
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORK_DIR="$HOME/ia-diagram-chat"
+# Création d'un répertoire temporaire
+TMP_DIR=$(mktemp -d)
+echo -e "${BLUE}Utilisation du répertoire temporaire: $TMP_DIR${NC}"
 
-echo -e "${BLUE}Installation dans: $WORK_DIR${NC}"
+# Nettoyage à la sortie
+cleanup() {
+    echo -e "\n${BLUE}Nettoyage...${NC}"
+    rm -rf "$TMP_DIR"
+    exit 1
+}
+trap cleanup EXIT
 
-# Téléchargement du projet
-if [ ! -d "$WORK_DIR" ]; then
-    echo -e "${BLUE}Création du répertoire de travail...${NC}"
-    mkdir -p "$WORK_DIR" || die "Impossible de créer le répertoire $WORK_DIR"
-    echo -e "${BLUE}Clonage du projet...${NC}"
-    git clone https://github.com/YAZ26300/DIABUILD.git "$WORK_DIR" || die "Erreur lors du clonage du projet"
-elif [ -d "$WORK_DIR/.git" ]; then
-    echo -e "${BLUE}Mise à jour du projet existant...${NC}"
-    cd "$WORK_DIR" || die "Impossible d'accéder au répertoire $WORK_DIR"
-    git pull || die "Erreur lors de la mise à jour du projet"
-fi
+# Clonage du projet dans le répertoire temporaire
+echo -e "${BLUE}Clonage du projet...${NC}"
+git clone https://github.com/YAZ26300/DIABUILD.git "$TMP_DIR" || die "Erreur lors du clonage du projet"
 
 # Se déplacer dans le répertoire du projet
-cd "$WORK_DIR" || die "Impossible d'accéder au répertoire $WORK_DIR"
+cd "$TMP_DIR" || die "Impossible d'accéder au répertoire temporaire"
 
 # Fonction pour demander une valeur
 ask_value() {
@@ -92,27 +84,36 @@ VITE_GITHUB_CLIENT_ID=$GITHUB_CLIENT_ID
 EOF
 
     echo -e "${GREEN}Fichier .env créé avec succès!${NC}"
-else
-    echo -e "${BLUE}Fichier .env existant détecté${NC}"
 fi
+
+# Vérification des fichiers nécessaires
+[ ! -f "docker-compose.yml" ] && die "Fichier docker-compose.yml non trouvé"
+[ ! -f "package.json" ] && die "Fichier package.json non trouvé"
+
+# Installation dans le répertoire final
+INSTALL_DIR="$HOME/ia-diagram-chat"
+echo -e "${BLUE}Installation dans: $INSTALL_DIR${NC}"
+
+# Création du répertoire d'installation
+if [ -d "$INSTALL_DIR" ]; then
+    echo -e "${BLUE}Mise à jour de l'installation existante...${NC}"
+    rm -rf "$INSTALL_DIR"
+fi
+
+# Copie des fichiers
+mkdir -p "$INSTALL_DIR"
+cp -r . "$INSTALL_DIR/"
+cd "$INSTALL_DIR" || die "Impossible d'accéder au répertoire d'installation"
 
 # Lancement des conteneurs Docker
 echo -e "${BLUE}Démarrage des conteneurs Docker...${NC}"
-if [ -f "docker-compose.yml" ]; then
-    docker-compose up -d || die "Erreur lors du démarrage des conteneurs Docker"
-else
-    die "Fichier docker-compose.yml non trouvé"
-fi
+docker-compose up -d || die "Erreur lors du démarrage des conteneurs Docker"
 
 # Installation des dépendances Node.js
 echo -e "${BLUE}Installation des dépendances...${NC}"
-if [ -f "package.json" ]; then
-    npm install || die "Erreur lors de l'installation des dépendances npm"
-else
-    die "Fichier package.json non trouvé"
-fi
+npm install || die "Erreur lors de l'installation des dépendances npm"
 
 # Démarrage de l'application
 echo -e "${GREEN}Installation terminée!${NC}"
 echo -e "${BLUE}Démarrage de l'application...${NC}"
-npm run dev
+exec npm run dev
