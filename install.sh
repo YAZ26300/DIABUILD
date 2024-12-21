@@ -1,17 +1,25 @@
 #!/bin/bash
 
-# Check environment
+# Check environment and Docker status in WSL
 if grep -qi microsoft /proc/version; then
     echo "WSL Environment detected!"
-    echo "For WSL, please:"
-    echo "1. Install Docker Desktop from: https://www.docker.com/products/docker-desktop/"
-    echo "2. Enable WSL integration in Docker Desktop"
-    echo "3. Restart this script once Docker Desktop is installed and configured"
-    echo ""
-    read -p "Have you already installed and configured Docker Desktop? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Please install Docker Desktop and restart the script"
+    
+    # Check if Docker is actually running and accessible
+    if docker info &> /dev/null; then
+        echo "Docker Desktop is running and accessible ✓"
+    else
+        echo "Error: Docker is not accessible in WSL."
+        echo "Please ensure:"
+        echo "1. Docker Desktop is installed and running"
+        echo "2. WSL integration is enabled in Docker Desktop settings"
+        echo "3. You've restarted your WSL terminal after enabling integration"
+        echo ""
+        echo "To fix:"
+        echo "1. Open Docker Desktop"
+        echo "2. Go to Settings > Resources > WSL Integration"
+        echo "3. Enable integration for your WSL distribution"
+        echo "4. Click Apply & Restart"
+        echo "5. Open a new WSL terminal and try again"
         exit 1
     fi
 else
