@@ -42,6 +42,10 @@ cd "$INSTALL_DIR" || die "Impossible d'accéder au répertoire d'installation"
 [ ! -f "src/App.tsx" ] && die "Fichier App.tsx non trouvé"
 [ ! -f "package.json" ] && die "Fichier package.json non trouvé"
 
+# Installation des dépendances manquantes
+echo -e "${BLUE}Installation des dépendances manquantes...${NC}"
+npm install --save @radix-ui/themes || die "Erreur lors de l'installation des dépendances"
+
 # Configuration des variables d'environnement
 echo -e "${BLUE}Configuration des variables d'environnement...${NC}"
 echo -e "${GREEN}Configuration de l'application${NC}"
@@ -87,6 +91,23 @@ npm-debug.log
 EOF
 
 echo -e "${GREEN}.dockerignore créé avec succès!${NC}"
+
+# Création du Dockerfile
+cat > Dockerfile << EOF
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+RUN npm install --save @radix-ui/themes
+
+COPY . .
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev", "--", "--host"]
+EOF
 
 # Construction et démarrage des conteneurs Docker
 echo -e "${BLUE}Construction et démarrage des conteneurs Docker...${NC}"
