@@ -2,7 +2,7 @@ import { Button } from '@radix-ui/themes';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { motion } from 'framer-motion';
 import { useCallback } from 'react';
-import ReactFlow, { Background, BackgroundVariant } from 'reactflow';
+import Ollama from './icons/Ollama';
 
 interface LandingPageProps {
   supabase: SupabaseClient | null;
@@ -335,6 +335,91 @@ export const LandingPage = ({ supabase }: LandingPageProps) => {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Ollama Section */}
+      <section className="py-24 px-4 relative bg-black/30">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="flex flex-col md:flex-row items-center gap-12"
+          >
+            {/* Logo et titre */}
+            <div className="flex-1 text-center md:text-left">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                viewport={{ once: true }}
+                className="inline-block mb-6"
+              >
+                <Ollama className="w-16 h-16 text-white" />
+              </motion.div>
+              <h2 className="text-4xl font-bold text-white mb-6">
+                Powered by Ollama
+              </h2>
+              <p className="text-xl text-gray-400 max-w-2xl">
+                Our application leverages the power of Ollama to provide fast, 
+                efficient, and locally-run AI capabilities. This ensures your data 
+                stays private while delivering enterprise-grade performance.
+              </p>
+            </div>
+
+            {/* Features list */}
+            <div className="flex-1">
+              <div className="bg-black/20 rounded-xl p-8 backdrop-blur-sm
+                          border border-emerald-500/20">
+                <ul className="space-y-4">
+                  <motion.li
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                    viewport={{ once: true }}
+                    className="flex items-start gap-3"
+                  >
+                    <svg className="w-6 h-6 text-emerald-400 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-300">
+                      Local AI processing for enhanced privacy and security
+                    </span>
+                  </motion.li>
+                  <motion.li
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    viewport={{ once: true }}
+                    className="flex items-start gap-3"
+                  >
+                    <svg className="w-6 h-6 text-emerald-400 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-300">
+                      Fast response times with no external API dependencies
+                    </span>
+                  </motion.li>
+                  <motion.li
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    viewport={{ once: true }}
+                    className="flex items-start gap-3"
+                  >
+                    <svg className="w-6 h-6 text-emerald-400 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-gray-300">
+                      Customizable models to match your specific needs
+                    </span>
+                  </motion.li>
+                </ul>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
