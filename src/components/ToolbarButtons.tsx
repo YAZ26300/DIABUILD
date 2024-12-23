@@ -1,5 +1,7 @@
 import { Button, DropdownMenu, Flex } from '@radix-ui/themes';
 import SupabaseIcon from './icons/SupabaseIcon';
+import Ollama from './icons/Ollama';
+import { useState } from 'react';
 
 interface ToolbarButtonsProps {
   onDeploy: () => void;
@@ -7,6 +9,9 @@ interface ToolbarButtonsProps {
   onReset: () => void;
   onLogout: () => void;
   sqlScript: string | null;
+  onOllamaCheck?: () => void;
+  onOllamaDisconnect?: () => void;
+  isOllamaConnected?: boolean;
 }
 
 export const ToolbarButtons = ({
@@ -14,14 +19,74 @@ export const ToolbarButtons = ({
   onDownload,
   onReset,
   onLogout,
-  sqlScript
+  sqlScript,
+  onOllamaCheck,
+  onOllamaDisconnect,
+  isOllamaConnected
 }: ToolbarButtonsProps) => {
+  const [isChecking, setIsChecking] = useState(false);
   const buttonStyles = "text-gray-400 hover:text-white flex items-center gap-2 border border-[rgb(34,255,158,0.3)] rounded-full px-3 py-1 cursor-pointer transition-all duration-300 hover:border-[rgb(34,255,158,0.5)] hover:bg-black/20 hover:shadow-[0_0_8px_rgba(34,255,158,0.3),inset_0_0_2px_rgba(34,255,158,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-[rgb(34,255,158,0.3)] disabled:hover:bg-transparent";
 
   const menuItemStyles = "flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-black/20 cursor-pointer transition-all duration-300 hover:shadow-[0_0_8px_rgba(34,255,158,0.3),inset_0_0_2px_rgba(34,255,158,0.3)] disabled:opacity-50 disabled:cursor-not-allowed";
 
+  const handleOllamaClick = async () => {
+    if (isOllamaConnected && onOllamaDisconnect) {
+      onOllamaDisconnect();
+      return;
+    }
+
+    if (onOllamaCheck && !isChecking) {
+      setIsChecking(true);
+      await onOllamaCheck();
+      setIsChecking(false);
+    }
+  };
+
   return (
-    <div className="tabs-right flex items-center gap-4">
+    <div className="tabs-right flex items-center gap-6">
+      <Button 
+        variant="ghost" 
+        onClick={handleOllamaClick}
+        className={`
+          ${buttonStyles}
+          relative
+          min-w-[160px]
+          justify-center
+          cursor-pointer
+          ${isOllamaConnected ? 'border-[rgb(34,255,158,0.5)] shadow-[0_0_8px_rgba(34,255,158,0.3)]' : ''}
+        `}
+      >
+        <div className="flex items-center gap-2">
+          <Ollama 
+            width="20" 
+            height="20" 
+            style={{ opacity: isOllamaConnected ? 1 : 0.5 }}
+          />
+          <span>
+            {isOllamaConnected ? 'Connected' : 'Connect Ollama'}
+          </span>
+        </div>
+        
+        <div
+          className="absolute right-2 w-2 h-2 rounded-full"
+          style={{
+            backgroundColor: isOllamaConnected ? '#22ff9e' : '#ff4444',
+            boxShadow: isOllamaConnected 
+              ? '0 0 8px rgba(34,255,158,0.5)' 
+              : '0 0 8px rgba(255,68,68,0.5)',
+          }}
+        />
+
+        {isChecking && (
+          <div
+            className="absolute left-0 bottom-0 h-0.5 bg-[rgb(34,255,158)] shadow-[0_0_8px_rgba(34,255,158,0.5)]"
+            style={{
+              animation: 'loadingAnimation 2s infinite',
+            }}
+          />
+        )}
+      </Button>
+
       <Button 
         onClick={onDeploy}
         variant="ghost" 
@@ -101,4 +166,23 @@ export const ToolbarButtons = ({
       </Button>
     </div>
   );
-}; 
+};
+
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes loadingAnimation {
+    0% {
+      width: 0;
+      left: 0;
+    }
+    50% {
+      width: 100%;
+      left: 0;
+    }
+    100% {
+      width: 0;
+      left: 100%;
+    }
+  }
+`;
+document.head.appendChild(style); 

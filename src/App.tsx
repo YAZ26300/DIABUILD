@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSupabaseAuth } from './hooks/useSupabaseAuth';
 import { AuthWrapper } from './components/AuthWrapper';
 import { ToolbarButtons } from './components/ToolbarButtons';
@@ -21,6 +21,7 @@ import LoadingModal from './components/LoadingModal';
 import { Background, Controls } from 'reactflow';
 import { ReactFlow } from 'reactflow';
 import { useChat } from './hooks/useChat';
+import { checkOllamaConnection } from './utils/ollamaUtils';
 
 function App() {
   const { supabase, isAuthenticated, isAuthLoading, handleLogout } = useSupabaseAuth();
@@ -35,6 +36,7 @@ function App() {
   } | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentStep, setDeploymentStep] = useState(1);
+  const [isOllamaConnected, setIsOllamaConnected] = useState(false);
 
   const handleReset = () => {
     setIsDeleteDialogOpen(true);
@@ -97,6 +99,20 @@ function App() {
     }
   };
 
+  const handleOllamaCheck = useCallback(async () => {
+    try {
+      const isConnected = await checkOllamaConnection();
+      setIsOllamaConnected(isConnected);
+    } catch (error) {
+      console.error('Erreur lors de la vérification d\'Ollama:', error);
+      setIsOllamaConnected(false);
+    }
+  }, []);
+
+  const handleOllamaDisconnect = useCallback(() => {
+    setIsOllamaConnected(false);
+  }, []);
+
   useEffect(() => {
     if (sqlScript) {
       requestAnimationFrame(() => {
@@ -115,7 +131,11 @@ function App() {
         <div className="chat-section">
           <h1 className="chat-title">IA Diagram Chat</h1>
           <MessageList messages={messages} isLoading={isLoading} />
-          <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
+          <ChatInput 
+            onSend={handleSendMessage} 
+            isLoading={isLoading} 
+            isOllamaConnected={isOllamaConnected}
+          />
         </div>
         <div className="content-section">
           <div className="tabs">
@@ -144,6 +164,9 @@ function App() {
               onReset={handleReset}
               onLogout={handleLogout}
               sqlScript={sqlScript}
+              onOllamaCheck={handleOllamaCheck}
+              onOllamaDisconnect={handleOllamaDisconnect}
+              isOllamaConnected={isOllamaConnected}
             />
           </div>
 

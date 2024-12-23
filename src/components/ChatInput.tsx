@@ -1,10 +1,12 @@
 import { useState, useRef } from 'react';
 import { Button, TextArea, Text, Flex, Box } from '@radix-ui/themes';
 import '@radix-ui/themes/styles.css';
+import Notification from './Notification';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   isLoading: boolean;
+  isOllamaConnected?: boolean;
 }
 
 const PROMPT_TEMPLATES = [
@@ -13,15 +15,24 @@ const PROMPT_TEMPLATES = [
   "Todo list"
 ];
 
-const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
+const ChatInput = ({ onSend, isLoading, isOllamaConnected }: ChatInputProps) => {
   const [input, setInput] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sqlContent, setSqlContent] = useState<string>('');
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loadingTemplate, setLoadingTemplate] = useState<string | null>(null);
 
   const handleTemplateClick = async (template: string) => {
+    if (!isOllamaConnected) {
+      setNotification({
+        message: "Veuillez connecter Ollama pour utiliser les templates",
+        type: 'error'
+      });
+      return;
+    }
+
     try {
       setLoadingTemplate(template);
       const response = await fetch('http://localhost:11434/api/generate', {
@@ -44,7 +55,9 @@ const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
       setInput(data.response);
     } catch (error) {
       console.error('Error generating prompt:', error);
-      setInput(`Create a ${template} with users, messages, and core features.`);
+      if (isOllamaConnected) {
+        setInput(`Create a ${template} with users, messages, and core features.`);
+      }
     } finally {
       setLoadingTemplate(null);
     }
@@ -68,6 +81,14 @@ const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading) return;
+
+    if (!isOllamaConnected && !sqlContent) {
+      setNotification({
+        message: "Veuillez connecter Ollama pour envoyer des messages",
+        type: 'error'
+      });
+      return;
+    }
 
     if (sqlContent) {
       onSend(sqlContent);
@@ -101,7 +122,7 @@ const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
             key={index}
             variant="surface"
             onClick={() => handleTemplateClick(template)}
-            disabled={isLoading || loadingTemplate !== null}
+            disabled={isLoading || loadingTemplate !== null || !isOllamaConnected}
             className={`
               bg-black/20
               text-gray-300
@@ -129,6 +150,7 @@ const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
               disabled:cursor-not-allowed
               disabled:hover:bg-black/20
               disabled:hover:border-[rgb(34,255,158,0.3)]
+              ${!isOllamaConnected ? 'opacity-50 cursor-not-allowed' : ''}
             `}
           >
             <div className="flex items-center justify-center gap-1.5 w-full">
@@ -151,7 +173,13 @@ const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
           <TextArea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={selectedFile ? "" : "Message AI or paste SQL"}
+            placeholder={
+              !isOllamaConnected && !selectedFile 
+                ? "Connectez Ollama pour commencer..." 
+                : selectedFile 
+                  ? "" 
+                  : "Message AI ou collez du SQL"
+            }
             className={`
               min-h-[100px] 
               bg-[#1a1a1a] 
@@ -170,8 +198,9 @@ const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
               focus:shadow-[0_0_10px_rgba(34,255,158,0.2),inset_0_0_10px_rgba(34,255,158,0.1)]
               disabled:opacity-50
               disabled:cursor-not-allowed
+              ${!isOllamaConnected && !selectedFile ? 'opacity-50' : ''}
             `}
-            disabled={isLoading}
+            disabled={isLoading || (!isOllamaConnected && !selectedFile)}
           />
           
           {selectedFile && (
@@ -246,6 +275,13 @@ const ChatInput = ({ onSend, isLoading }: ChatInputProps) => {
           </Flex>
         </Box>
       </form>
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </Box>
   );
 };
