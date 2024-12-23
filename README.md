@@ -2,6 +2,14 @@
 
 A web application for creating database diagrams using AI.
 
+## Demo
+
+![Demo Interface](Demo1.png)
+*Main interface with AI chat and diagram visualization*
+
+![Database Deployment](Demo2.png)
+*Database schema deployment to Supabase*
+
 ## Prerequisites
 
 ### 1. Ollama Installation
