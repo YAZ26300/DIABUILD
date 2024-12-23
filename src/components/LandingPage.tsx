@@ -50,7 +50,7 @@ export const LandingPage = ({ supabase }: LandingPageProps) => {
   const steps = [
     {
       title: "Describe Your Needs",
-      description: "Tell us what kind of database you need in plain English. Our AI understands your requirements and converts them into a structured schema."
+      description: "Tell us what kind of database you need. Our AI understands your requirements and converts them into a structured schema."
     },
     {
       title: "Refine Visually",
@@ -71,68 +71,7 @@ export const LandingPage = ({ supabase }: LandingPageProps) => {
     </div>
   ), []);
 
-  const demoNodes = [
-    {
-      id: '1',
-      type: 'default',
-      position: { x: 0, y: 0 },
-      data: { 
-        label: (
-          <div className="p-2">
-            <div className="font-bold text-emerald-400 mb-2">Users</div>
-            <div className="text-sm text-gray-400">
-              id: uuid<br/>
-              email: string<br/>
-              name: string
-            </div>
-          </div>
-        )
-      },
-      style: {
-        background: 'rgba(0, 0, 0, 0.3)',
-        border: '1px solid rgba(16, 185, 129, 0.2)',
-        borderRadius: '8px',
-        backdropFilter: 'blur(4px)',
-        width: 180,
-      }
-    },
-    {
-      id: '2',
-      type: 'default',
-      position: { x: 250, y: 100 },
-      data: {
-        label: (
-          <div className="p-2">
-            <div className="font-bold text-emerald-400 mb-2">Posts</div>
-            <div className="text-sm text-gray-400">
-              id: uuid<br/>
-              title: string<br/>
-              content: text<br/>
-              user_id: uuid
-            </div>
-          </div>
-        )
-      },
-      style: {
-        background: 'rgba(0, 0, 0, 0.3)',
-        border: '1px solid rgba(16, 185, 129, 0.2)',
-        borderRadius: '8px',
-        backdropFilter: 'blur(4px)',
-        width: 180,
-      }
-    }
-  ];
 
-  const demoEdges = [
-    {
-      id: 'e1-2',
-      source: '1',
-      target: '2',
-      animated: true,
-      style: { stroke: 'rgba(16, 185, 129, 0.4)' },
-      type: 'smoothstep',
-    }
-  ];
 
   return (
     <div className="relative min-h-screen overflow-x-hidden">
@@ -154,7 +93,7 @@ export const LandingPage = ({ supabase }: LandingPageProps) => {
               </h1>
               <p className="text-xl text-gray-400 mb-8 leading-relaxed">
                 Transform your ideas into production-ready database schemas instantly. 
-                No SQL knowledge required - just describe what you need in plain English.
+                No SQL knowledge required - just describe what you need.
               </p>
               <motion.div
                 whileHover={{ scale: 1.05 }}

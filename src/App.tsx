@@ -129,7 +129,7 @@ function App() {
     >
       <MainLayout>
         <div className="chat-section">
-          <h1 className="chat-title">IA Diagram Chat</h1>
+          <h1 className="chat-title">FlowMindAI</h1>
           <MessageList messages={messages} isLoading={isLoading} />
           <ChatInput 
             onSend={handleSendMessage} 

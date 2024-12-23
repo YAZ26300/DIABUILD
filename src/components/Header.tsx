@@ -10,7 +10,7 @@ const Header = ({ onDownload, onReset, hasSQL }: HeaderProps) => {
   return (
     <Flex justify="between" align="center" px="4" py="3" style={{ borderBottom: '1px solid #333' }}>
       <Text size="5" weight="bold" style={{ color: 'white' }}>
-        IA Diagram Chat
+      FlowMindAI
       </Text>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger>

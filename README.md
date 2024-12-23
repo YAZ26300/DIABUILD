@@ -1,4 +1,4 @@
-# IA Diagram Chat
+# FlowMindAI
 
 A web application for creating database diagrams using AI.
 
@@ -42,7 +42,7 @@ npm install
 1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
 2. Click on "New OAuth App"
 3. Fill in the information:
-   - Application name: `IA Diagram Chat`
+   - Application name: `FlowMindAI`
    - Homepage URL: `http://localhost:5173`
    - Authorization callback URL: `http://localhost:5173/auth/callback`
 4. Note the generated `Client ID`
